@@ -5,18 +5,19 @@ Author: Alex Cummaudo
 Date: 1 Aug 2017
 """
 
+from __future__ import division
+
 import pickle
 import os
 import json
 
-from __future__ import division
 from time import time as now
+from optparse import OptionParser
 from keras_frcnn import config
 from keras_frcnn import roi_helpers
 from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
-from optparse import OptionParser
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.image as mpimg
