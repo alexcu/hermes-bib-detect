@@ -387,7 +387,7 @@ def main():
             os.path.splitext(input_file_basename)[0]
         )
         print("Writing JSON file to '%s'..." % json_filename)
-        with open(json_filename) as outfile:
+        with open(json_filename, 'w') as outfile:
              json.dump(data, outfile)
 
 
