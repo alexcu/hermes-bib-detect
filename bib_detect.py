@@ -230,7 +230,7 @@ def annotate_image(image, detections):
         ax.text(
             x1+10,
             y1-30,
-            ("%s%%" % acc * 100),
+            ("%s%%" % int(acc * 100)),
             backgroundcolor="lime",
             color="black",
             size=15
@@ -364,7 +364,7 @@ def main():
             h = y2 - y1
             print("!! Detection at (%s, %s) to (%s, %s) "
             "(w=%s, h=%s) "
-            "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, acc * 100))
+            "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, int(acc * 100)))
 
     elapsed_time = now() - start_time
     print("Time taken: %ss." % elapsed_time)
