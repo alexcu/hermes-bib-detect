@@ -18,9 +18,13 @@ from keras_frcnn import roi_helpers
 from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.image as mpimg
+
 import cv2
 import numpy as np
 
