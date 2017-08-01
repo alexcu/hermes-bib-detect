@@ -201,20 +201,27 @@ def bboxes_to_dict(bboxes, probs, ratio):
     return result_dets
 
 def annotate_image(img, detections):
+    lime = (0,255,0)
+    black = (0,0,0)
+    font = cv2.FONT_HERSHEY_PLAIN
+    label = "%s%%" % int(acc * 100)
+    # Bib regions (draw first)
+    for region in detections:
+        x1 = region["x1"]
+        y1 = region["y1"]
+        x2 = region["x2"]
+        y2 = region["y2"]
+        cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
+    # labels for accuracy (overlay)
     for region in detections:
         x1 = region["x1"]
         y1 = region["y1"]
         x2 = region["x2"]
         y2 = region["y2"]
         acc = region["accuracy"]
-        lime = (0,255,0)
-        black = (0,0,0)
-        font = cv2.FONT_HERSHEY_PLAIN
-        label = "%s%%" % int(acc * 100)
         fnt_sz, baseline = cv2.getTextSize(label, font, 1, 1)
-        acc_rect_pt1 = (x1 - 5, y1 + baseline - 5)
+        acc_rect_pt1 = (x1, y1 + baseline - 5)
         acc_rect_pt2 = (x1 + fnt_sz[0] + 5, y1 - fnt_sz[1] - 5)
-        cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
         cv2.rectangle(img, acc_rect_pt1, acc_rect_pt2, lime, -1)
         cv2.putText(img, label, (x1,y1), font, 1, black)
     return img
