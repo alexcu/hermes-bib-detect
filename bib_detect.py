@@ -99,13 +99,12 @@ def format_image(img, config):
 
     return (img, ratio)
 
-def configure_keras_models(config, num_features):
+def configure_keras_models(config):
     """Configures Keras.
 
     Args:
         nn (Neural Net): A keras NN.
         config (object): The config file.
-        num_features (int): The number of features to configure.
     Returns:
         tuple: A tuple of three classifiers: (1) the rpn classifier, (2) the
                classifier (only), (3) the classifier.
@@ -337,7 +336,7 @@ def main():
         os.makedirs(options.output_dir)
 
     start_time = now()
-    models = configure_keras_models(config, num_features)
+    models = configure_keras_models(config)
     detections = process_image(options.input_file, config, models)
 
     if detections != None:
