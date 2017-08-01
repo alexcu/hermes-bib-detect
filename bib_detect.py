@@ -40,13 +40,13 @@ def check_options(options):
         boolean: True if ok, false otherwise.
     """
     if not options.input_file:
-        parser.error("Missing input file")
+        OPTS_PARSER.error("Missing input file")
         return false
     if not options.output_dir:
-        parser.error("Missing output directory")
+        OPTS_PARSER.error("Missing output directory")
         return False
     if not options.config_file:
-        parser.error("Missing config file")
+        OPTS_PARSER.error("Missing config file")
         return False
     return true
 
