@@ -234,23 +234,16 @@ def annotate_image(image, detections):
         )
     return fig
 
-def process_image(image_filename, config, models):
+def process_image(image, config, models):
     """Process the given image using FRCNN.
     Args:
-        image_filename (string): The image to process.
+        image (numpy 3D array): The image to process.
         config (object): Configuration settings.
         models (tuple): The models generated from Keras.
     Returns:
-        list or None: Returns a list of detected bounding boxes, mapped to
-                      their per-pixel coordinates, or none if failed.
+        list: Returns a list of detected bounding boxes, mapped to
+              their per-pixel coordinates.
     """
-    print("Processing: %s..." % image_filename)
-
-    if not os.path.exists(image_filename):
-        print("No such image at %s. Aborting." % image_filename)
-        return None
-
-    img = cv2.imread(image_filename)
     x, ratio = format_image(img, config)
     if K.image_dim_ordering() == 'tf':
         x = np.transpose(x, (0, 2, 3, 1))
@@ -345,6 +338,14 @@ def main():
     if not os.path.exists(options.output_dir):
         os.makedirs(options.output_dir)
 
+    img = cv2.imread(image_filename)
+
+    print("Processing: %s..." % image_filename)
+
+    if not os.path.exists(image_filename):
+        print("No such image at %s. Aborting." % image_filename)
+        return
+
     start_time = now()
     models = configure_keras_models(config)
     detections = process_image(options.input_file, config, models)
@@ -370,7 +371,7 @@ def main():
     # Writing out annotated image done if not doing json only
     if not options.json_only:
         print("Annotating image...")
-        img_annotated = annotate_image(image, detections)
+        img_annotated = annotate_image(img, detections)
         img_annotated_file = "%s/%s" % (options.output_dir, input_file_basename)
         print("Writing annotated image to '%s'..." % img_annotated_file)
         mpimg.imsave(img_annotated)
