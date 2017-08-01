@@ -211,7 +211,7 @@ def annotate_image(img, detections):
         black = (0,0,0)
         font = cv2.FONT_HERSHEY_PLAIN
         label = "%s%%" % int(acc * 100)
-        fnt_sz, baseline = cv2.getTextSize(label, font, 1)
+        fnt_sz, baseline = cv2.getTextSize(label, font, 1, 1)
         acc_rect_pt1 = (x1 - 5, y1 + baseline - 5)
         acc_rect_pt2 = (x1 + fnt_sz[0] + 5, y1 - fnt_sz[1] - 5)
         cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
