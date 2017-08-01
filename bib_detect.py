@@ -143,7 +143,7 @@ def configure_keras_models(config):
         feature_map_input,
         roi_input,
         config.num_rois,
-        nb_classes=len(class_mapping),
+        nb_classes=len(config.class_mapping),
         trainable=True
     )
 
@@ -293,7 +293,7 @@ def process_image(image_filename, config, models):
                     p_cls[0, ii, :]) == (p_cls.shape[2] - 1):
                 continue
 
-            cls_name = class_mapping[np.argmax(p_cls[0, ii, :])]
+            cls_name = config.class_mapping[np.argmax(p_cls[0, ii, :])]
 
             if cls_name not in bboxes:
                 bboxes[cls_name] = []
