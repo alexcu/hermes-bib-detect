@@ -330,7 +330,7 @@ def process_image(image_filename, config, models):
             probs[cls_name].append(np.max(p_cls[0, ii, :]))
 
     # Convert all bboxes to list of dict items
-    return bboxes_to_dict(bboxes, new_probs, ratio)
+    return bboxes_to_dict(bboxes, probs, ratio)
 
 def main():
     """Main program entry point"""
