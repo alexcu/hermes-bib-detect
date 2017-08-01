@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.image as mpimg
 import cv2
+import numpy as np
 
 # Parser
 OPTS_PARSER = OptionParser()
