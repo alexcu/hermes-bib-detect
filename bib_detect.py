@@ -234,10 +234,10 @@ def annotate_image(image, detections):
         )
     return fig
 
-def process_image(image, config, models):
+def process_image(img, config, models):
     """Process the given image using FRCNN.
     Args:
-        image (numpy 3D array): The image to process.
+        img (numpy 3D array): The image to process.
         config (object): Configuration settings.
         models (tuple): The models generated from Keras.
     Returns:
