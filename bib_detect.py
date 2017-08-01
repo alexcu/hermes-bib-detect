@@ -338,17 +338,17 @@ def main():
     if not os.path.exists(options.output_dir):
         os.makedirs(options.output_dir)
 
-    img = cv2.imread(image_filename)
+    img = cv2.imread(options.input_file)
 
-    print("Processing: %s..." % image_filename)
+    print("Processing: %s..." % options.input_file)
 
-    if not os.path.exists(image_filename):
-        print("No such image at %s. Aborting." % image_filename)
+    if not os.path.exists(options.input_file):
+        print("No such image at %s. Aborting." % options.input_file)
         return
 
     start_time = now()
     models = configure_keras_models(config)
-    detections = process_image(options.input_file, config, models)
+    detections = process_image(img, config, models)
 
     if detections != None:
         for region in detections:
