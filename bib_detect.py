@@ -318,7 +318,7 @@ def validate_image(img, config, models):
     # Convert all bboxes to list of dict items
     return bboxes_to_dict(bboxes, probs, ratio)
 
-def process_image(image_filename, config, options):
+def process_image(image_filename, config, options, models):
     """Processes validation on the given image.
     Args:
         image_filename (string): The image to process.
@@ -337,7 +337,6 @@ def process_image(image_filename, config, options):
         return
 
     start_time = now()
-    models = configure_keras_models(config)
     detections = validate_image(img, config, models)
 
     if detections != None:
@@ -390,9 +389,12 @@ def main():
     if not os.path.exists(options.output_dir):
         os.makedirs(options.output_dir)
 
+    # Load in the models
+    models = configure_keras_models(config)
+
     # Process every image
     for image in glob("%s/*.jpg" % options.input_dir):
-        process_image(image, config, options)
+        process_image(image, config, options, models)
 
 # Start of script
 if __name__ == '__main__':
