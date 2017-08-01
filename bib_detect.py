@@ -257,7 +257,7 @@ def process_image(image_filename, config, models):
     model_rpn, model_classifier_only, model_class = models
 
     # get the feature maps and output from the RPN
-    [y1, y2, F] = model_rpn.predict(X)
+    [y1, y2, f] = model_rpn.predict(x)
     roi = roi_helpers.rpn_to_roi(
         y1,
         y2,
@@ -287,7 +287,7 @@ def process_image(image_filename, config, models):
             rois_padded[0, curr_shape[1]:, :] = rois[0, 0, :]
             rois = rois_padded
 
-        [p_cls, p_regr] = model_classifier_only.predict([F, rois])
+        [p_cls, p_regr] = model_classifier_only.predict([f, rois])
 
         for ii in range(p_cls.shape[1]):
             if np.max(p_cls[0, ii, :]) < bbox_threshold or np.argmax(
