@@ -169,11 +169,11 @@ def configure_keras_models(config):
 
     return (model_rpn, model_classifier_only, model_classifier)
 
-def bboxes_to_dict(bboxes, new_probs, ratio):
+def bboxes_to_dict(bboxes, probs, ratio):
     """Converts the bounding boxes to per-pixel coords as a dictionary.
     Args:
         bboxes (list): A list of all the bounding boxes detected.
-        new_probs (list): A list containing the estimated accuracy.
+        probs (list): A list containing the estimated accuracy.
         ratio (float): The aspect ratio to convert.
     Returns:
         list: A mapped list to per-pixel coordinates as a dictionary.
@@ -181,7 +181,7 @@ def bboxes_to_dict(bboxes, new_probs, ratio):
     result_dets = []
     for key in bboxes:
         bbox = np.array(bboxes[key])
-        new_boxes, new_probs = roi_helpers.non_max_suppression_fast(
+        new_boxes, probs = roi_helpers.non_max_suppression_fast(
             bbox,
             np.array(probs[key]),
             overlap_thresh=0.5
@@ -192,7 +192,7 @@ def bboxes_to_dict(bboxes, new_probs, ratio):
             real_y1 = int(round(y1 // ratio))
             real_x2 = int(round(x2 // ratio))
             real_y2 = int(round(y2 // ratio))
-            accuracy = new_probs[jk]
+            accuracy = probs[jk]
             result_dets.append({
                 "x1": real_x1,
                 "y1": real_y1,
