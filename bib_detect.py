@@ -150,7 +150,7 @@ def configure_keras_models(config):
     print("Configuring Keras with:")
     print("  - Neural Network: %s..." % config.network)
     print("  - Weights loaded from: %s" % config.model_path)
-    print("  - Dimension Ordering: %s" % K.image_dim_odering())
+    print("  - Dimension Ordering: %s" % K.image_dim_ordering())
     print("  - Num Features: %s" % num_features)
     print("  - Num rois: %s" % config.num_rois)
 
