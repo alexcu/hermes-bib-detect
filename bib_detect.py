@@ -9,6 +9,7 @@ from __future__ import division
 
 import pickle
 import os
+from glob import glob
 import json
 
 from time import time as now
@@ -26,7 +27,7 @@ BOUNDING_BOX_THRESH = 0.8
 
 # Parser
 OPTS_PARSER = OptionParser()
-OPTS_PARSER.add_option("-i", dest="input_file", help="File to process")
+OPTS_PARSER.add_option("-i", dest="input_dir", help="Input directory to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
 OPTS_PARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
 OPTS_PARSER.add_option("-g", dest="image_only", help="Output image only", default=False)
@@ -40,8 +41,8 @@ def check_options(options):
     Returns:
         boolean: True if ok, false otherwise.
     """
-    if not options.input_file:
-        OPTS_PARSER.error("Missing input file")
+    if not options.input_dir:
+        OPTS_PARSER.error("Missing input directory")
         return false
     if not options.output_dir:
         OPTS_PARSER.error("Missing output directory")
@@ -226,8 +227,8 @@ def annotate_image(img, detections):
         cv2.putText(img, label, (x1,y1), font, 1, black)
     return img
 
-def process_image(img, config, models):
-    """Process the given image using FRCNN.
+def validate_image(img, config, models):
+    """Validates the given image using FRCNN.
     Args:
         img (numpy 3D array): The image to process.
         config (object): Configuration settings.
@@ -317,30 +318,24 @@ def process_image(img, config, models):
     # Convert all bboxes to list of dict items
     return bboxes_to_dict(bboxes, probs, ratio)
 
-def main():
-    """Main program entry point"""
-    options = OPTS_PARSER.parse_args()[0]
+def process_image(image_filename, config, options):
+    """Processes validation on the given image.
+    Args:
+        image_filename (string): The image to process.
+        config (object): Configuration settings.
+        options (object): Parsed command options.
+    """
+    print("Processing: %s..." % image_filename)
 
-    if not check_options(options):
+    if not os.path.exists(image_filename):
+        print("No such image at %s. Skipping." % image_filename)
         return
 
-    # Load config
-    config = load_config(options.config_file)
-
-    if not os.path.exists(options.output_dir):
-        os.makedirs(options.output_dir)
-
-    img = cv2.imread(options.input_file)
-
-    print("Processing: %s..." % options.input_file)
-
-    if not os.path.exists(options.input_file):
-        print("No such image at %s. Aborting." % options.input_file)
-        return
+    img = cv2.imread(image_filename)
 
     start_time = now()
     models = configure_keras_models(config)
-    detections = process_image(img, config, models)
+    detections = validate_image(img, config, models)
 
     if detections != None:
         for region in detections:
@@ -358,7 +353,7 @@ def main():
     elapsed_time = now() - start_time
     print("Time taken: %ss." % elapsed_time)
 
-    input_file_basename = os.path.basename(options.input_file)
+    input_file_basename = os.path.basename(image_filename)
 
     # Writing out annotated image done if not doing json only
     if not options.json_only:
@@ -379,6 +374,22 @@ def main():
         with open(json_filename, 'w') as outfile:
              json.dump(data, outfile)
 
+def main():
+    """Main program entry point"""
+    options = OPTS_PARSER.parse_args()[0]
+
+    if not check_options(options):
+        return
+
+    # Load config
+    config = load_config(options.config_file)
+
+    if not os.path.exists(options.output_dir):
+        os.makedirs(options.output_dir)
+
+    # Process every image
+    for image in glob("%s/*.jpg" % options.input_dir):
+        process_image(image, config, options)
 
 # Start of script
 if __name__ == '__main__':
