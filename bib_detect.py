@@ -30,7 +30,7 @@ BOUNDING_BOX_THRESH = 0.8
 OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_file", help="File to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
-OPTS_PARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
+OPTS_PfARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
 OPTS_PARSER.add_option("-g", dest="image_only", help="Output image only", default=False)
 OPTS_PARSER.add_option("-c", dest="config_file", help="Pickle config file")
 
@@ -272,6 +272,9 @@ def process_image(image_filename, config, models):
     roi[:, 2] -= roi[:, 0]
     roi[:, 3] -= roi[:, 1]
 
+    # Convert classes to a dict
+    class_mapping = { v: k for k, v in class_mapping.items() }
+
     # FRCNN algo
     for jk in range(roi.shape[0] // config.num_rois + 1):
         rois = np.expand_dims(
@@ -296,7 +299,7 @@ def process_image(image_filename, config, models):
                     p_cls[0, ii, :]) == (p_cls.shape[2] - 1):
                 continue
 
-            cls_name = config.class_mapping[np.argmax(p_cls[0, ii, :])]
+            cls_name = class_mapping[np.argmax(p_cls[0, ii, :])]
 
             if cls_name not in bboxes:
                 bboxes[cls_name] = []
