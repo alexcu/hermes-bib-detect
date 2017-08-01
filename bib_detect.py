@@ -271,7 +271,7 @@ def process_image(image_filename, config, models):
     roi[:, 3] -= roi[:, 1]
 
     # FRCNN algo
-    for jk in range(R.shape[0] // config.num_rois + 1):
+    for jk in range(roi.shape[0] // config.num_rois + 1):
         rois = np.expand_dims(
             roi[config.num_rois * jk:config.num_rois * (jk + 1), :],
             axis=0
