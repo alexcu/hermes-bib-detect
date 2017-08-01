@@ -195,7 +195,7 @@ def bboxes_to_dict(bboxes, probs, ratio):
             real_y1 = int(round(y1 // ratio))
             real_x2 = int(round(x2 // ratio))
             real_y2 = int(round(y2 // ratio))
-            accuracy = probs[jk]
+            accuracy = float(probs[jk])
             result_dets.append({
                 "x1": real_x1,
                 "y1": real_y1,
