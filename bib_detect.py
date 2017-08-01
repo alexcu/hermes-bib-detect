@@ -273,7 +273,7 @@ def process_image(image_filename, config, models):
     roi[:, 3] -= roi[:, 1]
 
     # Convert classes to a dict
-    class_mapping = { v: k for k, v in class_mapping.items() }
+    class_mapping = { v: k for k, v in config.class_mapping.items() }
 
     # FRCNN algo
     for jk in range(roi.shape[0] // config.num_rois + 1):
