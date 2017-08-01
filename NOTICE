@@ -1,0 +1,7 @@
+Bib Detect
+Copyright 2017 Alex Cummaudo
+
+This software includes code written by Yann Henon, namely the keras-frcnn
+code (https://github.com/yhenon/keras-frcnn).
+
+The code in this repository has been adapted for engineering purposes.
