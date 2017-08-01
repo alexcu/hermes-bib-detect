@@ -14,7 +14,7 @@ from keras.layers import Input
 from keras.models import Model
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.mpimg as mpimg
+import matplotlib.image as mpimg
 import pickle
 import os
 import cv2
