@@ -358,12 +358,12 @@ def main():
             acc = region["accuracy"]
             w = x2 - x1
             h = y2 - y1
-            print("Detection at (%s, %s) to (%s, %s) "
+            print("!! Detection at (%s, %s) to (%s, %s) "
             "(w=%s, h=%s) "
             "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, acc * 100))
 
-    elapsed_time = start_time - now()
-    print("Time taken: %sms." % elapsed_time)
+    elapsed_time = now() - start_time
+    print("Time taken: %ss." % elapsed_time)
 
     input_file_basename = os.path.basename(options.input_file)
 
