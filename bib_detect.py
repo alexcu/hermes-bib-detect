@@ -19,11 +19,6 @@ from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-
 import cv2
 import numpy as np
 
@@ -205,37 +200,19 @@ def bboxes_to_dict(bboxes, probs, ratio):
             })
     return result_dets
 
-def annotate_image(image, detections):
-    fig, ax = plt.subplots(1)
-    ax.imshow(image)
-    ax.set_axis_off()
+def annotate_image(img, detections):
     for region in detections:
         x1 = region["x1"]
         y1 = region["y1"]
         x2 = region["x2"]
         y2 = region["y2"]
         acc = region["accuracy"]
-        w = x2 - x1
-        h = y2 - y1
-        ax.add_patch(
-            patches.Rectangle(
-                (x1,y1),
-                width=w,
-                height=h,
-                linewidth=6,
-                fill=False,
-                color="lime"
-            )
-        )
-        ax.text(
-            x1+10,
-            y1-30,
-            ("%s%%" % int(acc * 100)),
-            backgroundcolor="lime",
-            color="black",
-            size=15
-        )
-    return fig
+        lime = (0,255,0)
+        font = cv2.FONT_HERSHEY_PLAIN
+        label = "%s%%" % int(acc * 100)
+        cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
+        cv2.putText(img, label, (x1,y1), font, 1, lime)
+    return img
 
 def process_image(img, config, models):
     """Process the given image using FRCNN.
