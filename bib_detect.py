@@ -368,7 +368,7 @@ def main():
     input_file_basename = os.path.basename(options.input_file)
 
     # Writing out annotated image done if not doing json only
-    if not config.json_only:
+    if not options.json_only:
         print("Annotating image...")
         img_annotated = annotate_image(image, detections)
         img_annotated_file = "%s/%s" % (options.output_dir, input_file_basename)
@@ -376,7 +376,7 @@ def main():
         mpimg.imsave(img_annotated)
 
     # JSON processing done if not doing image only
-    if not config.image_only:
+    if not options.image_only:
         data = {"bib_regions": detections, "elapsed_time": elapsed_time}
         json_filename = "%s/%s.json" % (
             options.output_dir,
