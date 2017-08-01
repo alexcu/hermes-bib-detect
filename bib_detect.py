@@ -208,10 +208,12 @@ def annotate_image(img, detections):
         y2 = region["y2"]
         acc = region["accuracy"]
         lime = (0,255,0)
+        black = (0,0,0)
         font = cv2.FONT_HERSHEY_PLAIN
         label = "%s%%" % int(acc * 100)
         cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
-        cv2.putText(img, label, (x1,y1), font, 1, lime)
+        cv2.rectangle(img, (x1, y1-5), (x2, y2), lime, -1)
+        cv2.putText(img, label, (x1,y1), font, 1, black)
     return img
 
 def process_image(img, config, models):
