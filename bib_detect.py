@@ -332,7 +332,7 @@ def process_image(image_filename, config, options):
         return
 
     img = cv2.imread(image_filename)
-    if img == None:
+    if img is None:
         print("Cannot read this image properly. Skipping.")
         return
 
