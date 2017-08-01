@@ -30,7 +30,7 @@ BOUNDING_BOX_THRESH = 0.8
 OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_file", help="File to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
-OPTS_PfARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
+OPTS_PARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
 OPTS_PARSER.add_option("-g", dest="image_only", help="Output image only", default=False)
 OPTS_PARSER.add_option("-c", dest="config_file", help="Pickle config file")
 
