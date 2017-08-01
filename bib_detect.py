@@ -375,6 +375,7 @@ def main():
     # Writing out annotated image done if not doing json only
     if not options.json_only:
         print("Annotating image...")
+        img = mpimg.imread(options.input_file)
         img_annotated = annotate_image(img, detections)
         img_annotated_file = "%s/%s" % (options.output_dir, input_file_basename)
         print("Writing annotated image to '%s'..." % img_annotated_file)
