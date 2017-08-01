@@ -48,7 +48,7 @@ def check_options(options):
     if not options.config_file:
         OPTS_PARSER.error("Missing config file")
         return False
-    return true
+    return True
 
 def load_config(filename):
     """Loads in configuration file.
