@@ -332,6 +332,9 @@ def process_image(image_filename, config, options):
         return
 
     img = cv2.imread(image_filename)
+    if img == None:
+        print("Cannot read this image properly. Skipping.")
+        return
 
     start_time = now()
     models = configure_keras_models(config)
