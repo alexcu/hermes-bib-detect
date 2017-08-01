@@ -12,9 +12,9 @@ from keras_frcnn import roi_helpers
 from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
-from matplotlib import pyplot as plt
-from matplotlib import patches as patches
-from matplotlib import mpimg as mpimg
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.mpimg as mpimg
 import pickle
 import os
 import cv2
