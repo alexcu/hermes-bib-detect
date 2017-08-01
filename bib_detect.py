@@ -331,7 +331,7 @@ def main():
         return
 
     # Load config
-    config = load_config(options)
+    config = load_config(options.config_file)
 
     if not os.path.exists(options.output_dir):
         os.makedirs(options.output_dir)
