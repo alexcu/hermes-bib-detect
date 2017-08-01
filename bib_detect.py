@@ -24,6 +24,8 @@ import matplotlib.image as mpimg
 import cv2
 import numpy as np
 
+BOUNDING_BOX_THRESH = 0.8
+
 # Parser
 OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_file", help="File to process")
@@ -290,7 +292,7 @@ def process_image(image_filename, config, models):
         [p_cls, p_regr] = model_classifier_only.predict([f, rois])
 
         for ii in range(p_cls.shape[1]):
-            if np.max(p_cls[0, ii, :]) < bbox_threshold or np.argmax(
+            if np.max(p_cls[0, ii, :]) < BOUNDING_BOX_THRESH or np.argmax(
                     p_cls[0, ii, :]) == (p_cls.shape[2] - 1):
                 continue
 
