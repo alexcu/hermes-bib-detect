@@ -275,6 +275,10 @@ def process_image(image_filename, config, models):
     # Convert classes to a dict
     class_mapping = { v: k for k, v in config.class_mapping.items() }
 
+    # apply the spatial pyramid pooling to the proposed regions
+    bboxes = {}
+    probs = {}
+
     # FRCNN algo
     for jk in range(roi.shape[0] // config.num_rois + 1):
         rois = np.expand_dims(
