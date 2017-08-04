@@ -367,12 +367,17 @@ def process_image(image_filename, config, options, models):
 
     # JSON processing done if not doing image only
     if not options.image_only:
-        data = {"bib_regions": detections, "elapsed_time": elapsed_time}
+        data = {
+            "bib": {
+                "regions": detections,
+                "elapsed_time": elapsed_time
+            }
+        }
         json_filename = "%s/%s.json" % (
             options.output_dir,
             os.path.splitext(input_file_basename)[0]
         )
-        print("Writing JSON file to '%s'..." % json_filename)
+        print("Writing JSON to '%s'..." % json_filename)
         with open(json_filename, 'w') as outfile:
              json.dump(data, outfile)
 
