@@ -45,6 +45,8 @@ Respective JSON file for this image:
             "x2":272,
             "x1":136,
             "y2":486,
+            "width": 136,
+            "height": 97,
             "accuracy":0.9993014335632324
          },
          {
@@ -52,6 +54,8 @@ Respective JSON file for this image:
             "x2":584,
             "x1":467,
             "y2":584,
+            "width": 117,
+            "height": 228,
             "accuracy":0.9964402318000793
          }
       ]

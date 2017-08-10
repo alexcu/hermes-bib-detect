@@ -348,6 +348,8 @@ def process_image(image_filename, config, options, models):
             acc = region["accuracy"]
             w = x2 - x1
             h = y2 - y1
+            region["width"] = w
+            region["height"] = h
             print("!! Detection at (%s, %s) to (%s, %s) "
             "(w=%s, h=%s) "
             "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, int(acc * 100)))
