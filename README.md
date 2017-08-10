@@ -14,7 +14,7 @@ You will need the following:
 
 To run:
 
-```
+```bash
 $ python bib_detect.py -c /path/to/out/models/config.pickle \
                        -i /path/to/input/images \
                        -o /path/to/output
@@ -28,3 +28,34 @@ The `-g` and `-j` switches are optional:
 
 Not specifying either will spit out both to the output directory.
 
+## Output
+
+Sample annotated image:
+
+![Sample Output](https://i.imgur.com/gFpCPCC.jpg)
+
+Respective JSON file for this image:
+
+```json
+{
+   "bib":{
+      "regions":[
+         {
+            "y1":389,
+            "x2":272,
+            "x1":136,
+            "y2":486,
+            "accuracy":0.9993014335632324
+         },
+         {
+            "y1":486,
+            "x2":584,
+            "x1":467,
+            "y2":584,
+            "accuracy":0.9964402318000793
+         }
+      ]
+   },
+   "elapsed_time":0.3909590244293213
+}
+```
