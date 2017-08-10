@@ -63,3 +63,5 @@ Respective JSON file for this image:
    "elapsed_time":0.3909590244293213
 }
 ```
+
+The `elapsed_time` field is in **seconds**.
