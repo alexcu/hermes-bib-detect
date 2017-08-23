@@ -23,34 +23,49 @@ $(info Running hermes...)
 
 # Conditionally configure run based on whether we want to crop people
 ifeq ($(CROP_PEOPLE),1)
-run: make_out_dir \
+run: prepare \
      person_detect \
      bib_detect \
      person_aggregate \
      text_detect \
      text_recognise
 else
-run: make_out_dir \
+run: prepare \
      bib_detect \
      text_detect \
      text_recognise
 endif
 
-make_out_dir:
+prepare:
+	$(info Running mogrify on all input images to ensure auto-orientation...)
+	mogrify -auto-orient $(IN_DIR)/*.jpg
 	$(info Creating output directory at $(OUT_DIR)...)
 	mkdir -p $(OUT_DIR)
 
 person_detect:
 	$(info Running person detection...)
+	./person_detect.rb $(IN_DIR) $(OUT_DIR)/person $(DARKNET_DIR) -c
 
 bib_detect:
 	$(info Running bib detection...)
+ifeq ($(CROP_PEOPLE),1)
+	python detect.py -i $(OUT_DIR)/person -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB)
+else
+	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB)
+endif
 
 person_aggregate:
 	$(info Running aggregation of cropped people...)
+	python person_aggregate.py $(IN_DIR) $(OUT_DIR)/aggregate $(OUT_DIR)/bib $(OUT_DIR)/person
 
 text_detect:
 	$(info Running text detection...)
+ifeq ($(CROP_PEOPLE),1)
+	python detect.py -i $(OUT_DIR)/aggregate -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT)
+else
+	python detect.py -i $(OUT_DIR)/bib -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT)
+endif
 
 text_recognise:
 	$(info Running text recognition...)
+	./recognise.rb $(OUT_DIR)/text $(OUT_DIR)/chars $(TESSERACT_BIN_DIR) $(TESSDATA_DIR)
