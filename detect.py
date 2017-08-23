@@ -41,7 +41,7 @@ OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_dir", help="Input directory to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
 OPTS_PARSER.add_option("-c", dest="config_file", help="Pickle config file")
-OPTS_PARSER.add_option("-t", dest="type_of_prediction", help="Type of prediction (bib or text)")
+OPTS_PARSER.add_option("-t", dest="prediction_type", help="Type of prediction (bib or text)")
 
 # TODO: Move person detection using YOLO darknet into this pipeline...
 
@@ -395,7 +395,7 @@ def process_image(image_filename, options, config, models):
         return
 
     # JSON processing done if not doing image only
-    type_of_prediction = "text" if options.type_of_prediction == "text" else "bib"
+    prediction_type = "text" if options.prediction_type == "text" else "bib"
 
     # Run predictions
     start_time = now()
@@ -408,7 +408,7 @@ def process_image(image_filename, options, config, models):
         return
 
     # Text prediction only uses text...
-    if type_of_prediction == "text":
+    if prediction_type == "text":
         # Largest prediction (i.e., with the greatest area)
         lp = predictions[0]
         for p in predictions:
@@ -425,14 +425,17 @@ def process_image(image_filename, options, config, models):
     for i, crop in enumerate(crops):
         input_id = os.path.splitext(os.path.basename(image_filename))[0]
         out_file = os.path.join(options.output_dir, input_id)
-        crop_file = "%s_crop_%s_%i.jpg"  % (out_file, type_of_prediction, i)
+        if prediction_type == "bib":
+            crop_file = "%s_crop_%s_%i.jpg"  % (out_file, prediction_type, i)
+        else:
+            crop_file = "%s_crop_%s.jpg" % (out_file, prediction_type)
         print("Writing crop #%s to '%s'..." % (i, crop_file))
         cv2.imwrite(crop_file, crop)
 
     # Write out JSON into one file
     json_file = "%s.json" % (out_file)
     data = {
-        type_of_prediction: { "regions": predictions, "elapsed_seconds": elapsed_time }
+        prediction_type: { "regions": predictions, "elapsed_seconds": elapsed_time }
     }
     print("Writing JSON to '%s'..." % json_file)
     with open(json_file, 'w') as outfile:
