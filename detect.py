@@ -407,6 +407,16 @@ def process_image(image_filename, options, config, models):
         print("No predictions made for this image. Skipping...")
         return
 
+    # Text prediction only uses text...
+    if type_of_prediction == "text":
+        # Largest prediction (i.e., with the greatest area)
+        lp = predictions[0]
+        for p in predictions:
+            if p["width"] * p["height"] > lp["width"] * lp["height"]:
+                lp = p
+        # Only keep the largest prediction!
+        predictions = [lp]
+
     # Get our crops
     crops = [img[r["y1"]:r["y2"], r["x1"]:r["x2"]] for r in predictions]
     print("Time taken: %ss." % elapsed_time)
