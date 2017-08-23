@@ -50,9 +50,9 @@ def process_line(in_dir, line, files_read)
     filename = matches[1]
     unique_image_id = File.basename(filename, '.jpg')
     files_read << unique_image_id
-    elapsed_time = matches[2].to_f
+    elapsed_seconds = matches[2].to_f
     # Yet to populate...
-    return [unique_image_id, elapsed_time]
+    return [unique_image_id, elapsed_seconds]
   elsif line.start_with?('person,')
     raw_data = line.split(',')
     image = Magick::Image.ping("#{in_dir}/#{unique_image_id}.jpg").first
@@ -107,7 +107,7 @@ def proc_files(in_dir, out_dir, darknet_dir, should_crop)
         images[unique_image_id] = {
           person: {
             regions: [],
-            elapsed_time: data
+            elapsed_seconds: data
           }
         }
       # Got region data
