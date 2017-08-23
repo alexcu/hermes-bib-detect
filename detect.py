@@ -407,22 +407,24 @@ def process_image(image_filename, options, config, models):
     crops = [img[r["y1"]:r["y2"], r["x1"]:r["x2"]] for r in predictions]
     print("Time taken: %ss." % elapsed_time)
 
-    # Write out crops and respective JSON
+    # Write out crops into individual files
     for i, crop in enumerate(crops):
-        input_id = os.path.splitext(os.path.basename(image_filename))[0]
-        out_file = os.path.join(options.output_dir, input_id)
-        json_file = "%s_crop%i.json" % (out_file, i)
-        crop_file = "%s_crop%i.jpg"  % (out_file, i)
-        print("Writing crop #%s to '%s'..." % (i, crop_file))
-        cv2.imwrite(crop_file, crop)
         # JSON processing done if not doing image only
         type_of_prediction = "text" if "text" in config.model_path else "bib"
-        data = {
-            type_of_prediction: { "regions": predictions[i], "elapsed_seconds": elapsed_time }
-        }
-        print("Writing JSON to '%s'..." % json_file)
-        with open(json_file, 'w') as outfile:
-            json.dump(data, outfile)
+        input_id = os.path.splitext(os.path.basename(image_filename))[0]
+        out_file = os.path.join(options.output_dir, input_id)
+        crop_file = "%s_crop_%s_%i.jpg"  % (out_file, type_of_prediction, i)
+        print("Writing crop #%s to '%s'..." % (i, crop_file))
+        cv2.imwrite(crop_file, crop)
+
+    # Write out JSON into one file
+    json_file = "%s.json" % (out_file)
+    data = {
+        type_of_prediction: { "regions": predictions, "elapsed_seconds": elapsed_time }
+    }
+    print("Writing JSON to '%s'..." % json_file)
+    with open(json_file, 'w') as outfile:
+        json.dump(data, outfile)
 
 def main():
     """Main program entry point"""
