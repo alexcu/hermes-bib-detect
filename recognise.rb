@@ -56,7 +56,7 @@ def proc_files(in_dir, out_dir, tesseract_dir, tessdata_dir)
       stdout
       quiet
       makebox
-      --psm 8
+      --psm 10
       --oem 1
       --tessdata-dir "#{tessdata_dir}"
       -c tessedit_char_whitelist="0123456789"
