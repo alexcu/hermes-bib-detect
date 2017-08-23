@@ -10,9 +10,6 @@ Usage:
                                /path/to/person/crops \
                                /path/to/bib/crops
 
-    Provide a pickle config trained on Bibs for bib detection or on
-    text for text detection.
-
 Author: Alex Cummaudo
 Date: 23 Aug 2017
 """
