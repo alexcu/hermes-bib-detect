@@ -20,6 +20,7 @@ require 'rmagick'
 def process_line(file, line)
   re = /^([^\s]+)\s(\d+)\s(\d+)\s(\d+)\s(\d+)\s\d+$/
   matches = re.match(line)
+  return nil if matches.nil?
   char = matches[1]
   # NOTE: Coordinate system of tesseract has (0,0) in BOTTOM-LEFT not TOP-LEFT!
   # So we convert (x,y) -> (x,h-y)
@@ -67,6 +68,7 @@ def proc_files(in_dir, out_dir, tesseract_dir, tessdata_dir)
       while line = stdoe.gets
         puts line
         data = process_line(file, line)
+        next if data.nil?
         char_regions[unique_image_id][:char][:regions] << data
         char_regions[unique_image_id][:char][:string] << data[:char]
       end
