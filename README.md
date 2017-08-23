@@ -6,27 +6,34 @@ either be original raw images or cropped images using the person detection
 
 ## Usage
 
+Run the scripts in the following order:
+
+1. `person_detect.rb` (optional) to detect and crop people
+2. `detect.py` with bibs
+6. `person_aggregate.py` (optional) to aggregate results from cropped people
+4. `detect.py` with text
+5. `recognise.rb` to recognise the text
+
+### `detect.py`
+
 You will need the following:
 
 1. The training configuration file (`config.pickle`) along with the model hdf5
    file. These should sit in the same directory.
 2. Input files in a directory.
 
+**It is imperative that you name the model `model_bib_[date]_frcnn.hdf5` for
+bib models and similarly `model_text_[date]_frcnn.hdf5` for text models.**
+
 To run:
 
 ```bash
-$ python bib_detect.py -c /path/to/out/models/config.pickle \
-                       -i /path/to/input/images \
-                       -o /path/to/output
-                       [-g][-j]
+$ python detect.py -c /path/to/out/models/config.pickle \
+                   -i /path/to/input/images \
+                   -o /path/to/output
 ```
 
-The `-g` and `-j` switches are optional:
-
-- `-g` will spit out _only_ annotated images.
-- `-j` will spit out _only_ JSON files.
-
-Not specifying either will spit out both to the output directory.
+To run on
 
 ## Output
 
@@ -58,9 +65,9 @@ Respective JSON file for this image:
             "height": 228,
             "accuracy":0.9964402318000793
          }
-      ]
-   },
-   "elapsed_time":0.3909590244293213
+      ],
+      "elapsed_seconds":0.3909590244293213
+   }
 }
 ```
 
