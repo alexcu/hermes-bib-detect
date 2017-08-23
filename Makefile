@@ -28,12 +28,14 @@ run: prepare \
      bib_detect \
      person_aggregate \
      text_detect \
-     text_recognise
+     text_recognise \
+     annotate
 else
 run: prepare \
      bib_detect \
      text_detect \
-     text_recognise
+     text_recognise \
+     annotate
 endif
 
 prepare:
@@ -69,3 +71,11 @@ endif
 text_recognise:
 	$(info Running text recognition...)
 	./recognise.rb $(OUT_DIR)/text $(OUT_DIR)/chars $(TESSERACT_BIN_DIR) $(TESSDATA_DIR)
+
+annotate:
+	$(info Annotating final output...)
+ifeq ($(CROP_PEOPLE),1)
+	python annotate.py $(IN_DIR) $(OUT_DIR)/annotated $(OUT_DIR)/text $(OUT_DIR)/chars $(OUT_DIR)/aggregate
+else
+	python annotate.py $(IN_DIR) $(OUT_DIR)/annotated $(OUT_DIR)/text $(OUT_DIR)/chars $(OUT_DIR)/bib
+endif
