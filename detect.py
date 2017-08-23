@@ -416,9 +416,9 @@ def process_image(image_filename, options, config, models):
         print("Writing crop #%s to '%s'..." % (i, crop_file))
         cv2.imwrite(crop_file, crop)
         # JSON processing done if not doing image only
+        type_of_prediction = "text" if "text" in config.model_path else "bib"
         data = {
-            "regions": predictions[i],
-            "elapsed_time": elapsed_time
+            type_of_prediction: { "regions": predictions[i], "elapsed_seconds": elapsed_time }
         }
         print("Writing JSON to '%s'..." % json_file)
         with open(json_file, 'w') as outfile:
