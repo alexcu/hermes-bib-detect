@@ -1,8 +1,18 @@
 #!/usr/bin/env python
 """
-This is a python script to detect bibs using Keras.
+This is a python script to detect bibs & text using Keras.
+
+Usage:
+
+    python detect.py -i /path/to/input/files \
+                     -o /path/to/output \
+                     -c /path/to/pickle.config
+
+    Provide a pickle config trained on Bibs for bib detection or on
+    text for text detection.
+
 Author: Alex Cummaudo
-Date: 1 Aug 2017
+Date: 22 Aug 2017
 """
 
 from __future__ import division
@@ -24,14 +34,15 @@ import cv2
 import numpy as np
 
 BOUNDING_BOX_THRESH = 0.8
+BOUNDING_BOX_PADDING = 0.1
 
 # Parser
 OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_dir", help="Input directory to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
-OPTS_PARSER.add_option("-j", dest="json_only", help="Output JSON only", default=False)
-OPTS_PARSER.add_option("-g", dest="image_only", help="Output image only", default=False)
 OPTS_PARSER.add_option("-c", dest="config_file", help="Pickle config file")
+
+# TODO: Move person detection using YOLO darknet into this pipeline...
 
 def check_options(options):
     """Checks if the provided options are ok.
@@ -48,7 +59,7 @@ def check_options(options):
         OPTS_PARSER.error("Missing output directory")
         return False
     if not options.config_file:
-        OPTS_PARSER.error("Missing config file")
+        OPTS_PARSER.error("Missing bib config file")
         return False
     return True
 
@@ -86,20 +97,20 @@ def format_image(img, config):
         new_width = int(ratio * width)
         new_height = int(img_min_side)
 
-    img = cv2.resize(img, (new_width, new_height),
-                     interpolation=cv2.INTER_CUBIC)
+    resize_img = cv2.resize(img, (new_width, new_height),
+                            interpolation=cv2.INTER_CUBIC)
 
     # Channel modifications
-    img = img[:, :, (2, 1, 0)]
-    img = img.astype(np.float32)
-    img[:, :, 0] -= config.img_channel_mean[0]
-    img[:, :, 1] -= config.img_channel_mean[1]
-    img[:, :, 2] -= config.img_channel_mean[2]
-    img /= config.img_scaling_factor
-    img = np.transpose(img, (2, 0, 1))
-    img = np.expand_dims(img, axis=0)
+    resize_img = resize_img[:, :, (2, 1, 0)]
+    resize_img = resize_img.astype(np.float32)
+    resize_img[:, :, 0] -= config.img_channel_mean[0]
+    resize_img[:, :, 1] -= config.img_channel_mean[1]
+    resize_img[:, :, 2] -= config.img_channel_mean[2]
+    resize_img /= config.img_scaling_factor
+    resize_img = np.transpose(resize_img, (2, 0, 1))
+    resize_img = np.expand_dims(resize_img, axis=0)
 
-    return (img, ratio)
+    return (resize_img, ratio)
 
 def configure_keras_models(config):
     """Configures Keras.
@@ -168,12 +179,13 @@ def configure_keras_models(config):
 
     return (model_rpn, model_classifier_only, model_classifier)
 
-def bboxes_to_dict(bboxes, probs, ratio):
+def bboxes_to_dict(bboxes, probs, ratio, img):
     """Converts the bounding boxes to per-pixel coords as a dictionary.
     Args:
         bboxes (list): A list of all the bounding boxes detected.
         probs (list): A list containing the estimated accuracy.
         ratio (float): The aspect ratio to convert.
+        img (numpy 3D array): The image to process.
     Returns:
         list: A mapped list to per-pixel coordinates as a dictionary.
     """
@@ -187,16 +199,45 @@ def bboxes_to_dict(bboxes, probs, ratio):
         )
         for jk in range(new_boxes.shape[0]):
             x1, y1, x2, y2 = new_boxes[jk, :]
+            image_height, image_width, _ = img.shape
+
+            real_width = int(round(image_width // ratio))
+            real_height = int(round(image_height // ratio))
+
             real_x1 = int(round(x1 // ratio))
             real_y1 = int(round(y1 // ratio))
             real_x2 = int(round(x2 // ratio))
             real_y2 = int(round(y2 // ratio))
+            width = real_x2 - real_x1
+            height = real_y2 - real_y1
             accuracy = float(probs[jk])
+
+            # Apply padding
+            scale = [ [-1, -1], [1, 1] ]
+            diag = int(round(np.linalg.norm(np.array([real_x2, real_y2]) - np.array([real_x1, real_y1]))))
+            padding = int(round(diag * BOUNDING_BOX_PADDING))
+            real_x1 -= padding
+            real_y1 -= padding
+            real_x2 += padding
+            real_y2 += padding
+
+            # Crop bbox within image
+            if real_x1 < 0:
+                real_x1 = 0
+            if real_y1 < 0:
+                real_y1 = 0
+
+            print("!! Prediction at (%s, %s) to (%s, %s) "
+                    "(%s x %s) [Accuracy: %s%%]" %
+                    (real_x1, real_y1, real_x2, real_y2, width, height, accuracy))
+
             result_dets.append({
                 "x1": real_x1,
                 "y1": real_y1,
                 "x2": real_x2,
                 "y2": real_y2,
+                "width": width,
+                "height": height,
                 "accuracy": accuracy
             })
     return result_dets
@@ -207,6 +248,7 @@ def annotate_image(img, detections):
     font = cv2.FONT_HERSHEY_PLAIN
     # Bib regions (draw first)
     for region in detections:
+        print detections
         x1 = region["x1"]
         y1 = region["y1"]
         x2 = region["x2"]
@@ -227,8 +269,8 @@ def annotate_image(img, detections):
         cv2.putText(img, label, (x1,y1), font, 1, black)
     return img
 
-def validate_image(img, config, models):
-    """Validates the given image using FRCNN.
+def run_predictions(img, config, models):
+    """Runs predictions using the model on the image using FRCNN.
     Args:
         img (numpy 3D array): The image to process.
         config (object): Configuration settings.
@@ -316,14 +358,29 @@ def validate_image(img, config, models):
             probs[cls_name].append(np.max(p_cls[0, ii, :]))
 
     # Convert all bboxes to list of dict items
-    return bboxes_to_dict(bboxes, probs, ratio)
+    return bboxes_to_dict(bboxes, probs, ratio, img)
 
-def process_image(image_filename, config, options, models):
+def notify_prediction(region):
+    """Notifies the prediction of a region to stdout.
+    """
+    x1 = region["x1"]
+    y1 = region["y1"]
+    x2 = region["x2"]
+    y2 = region["y2"]
+    acc = region["accuracy"]
+    w = region["width"]
+    h = region["height"]
+    print("!! Prediction at (%s, %s) to (%s, %s) "
+    "(w=%s, h=%s) "
+    "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, int(acc * 100)))
+
+def process_image(image_filename, options, config, models):
     """Processes validation on the given image.
     Args:
         image_filename (string): The image to process.
-        config (object): Configuration settings.
         options (object): Parsed command options.
+        config: Pickle config loaded for configuration.
+        models: Loaded models.
     """
     print("Processing: %s..." % image_filename)
 
@@ -336,52 +393,36 @@ def process_image(image_filename, config, options, models):
         print("Cannot read this image properly. Skipping.")
         return
 
+    # Run predictions
     start_time = now()
-    detections = validate_image(img, config, models)
-
-    if detections != None:
-        for region in detections:
-            x1 = region["x1"]
-            y1 = region["y1"]
-            x2 = region["x2"]
-            y2 = region["y2"]
-            acc = region["accuracy"]
-            w = x2 - x1
-            h = y2 - y1
-            region["width"] = w
-            region["height"] = h
-            print("!! Detection at (%s, %s) to (%s, %s) "
-            "(w=%s, h=%s) "
-            "[Accuracy = %s%%]" % (x1, y1, x2, y2, w, h, int(acc * 100)))
-
+    predictions = [p for p in run_predictions(img, config, models) if p is not None]
     elapsed_time = now() - start_time
+
+    # Skip if no crops
+    if len(predictions) == 0:
+        print("No predictions made for this image. Skipping...")
+        return
+
+    # Get our crops
+    crops = [img[r["y1"]:r["y2"], r["x1"]:r["x2"]] for r in predictions]
     print("Time taken: %ss." % elapsed_time)
 
-    input_file_basename = os.path.basename(image_filename)
-
-    # Writing out annotated image done if not doing json only
-    if not options.json_only:
-        print("Annotating image...")
-        img_annotated = annotate_image(img, detections)
-        img_annotated_file = "%s/%s" % (options.output_dir, input_file_basename)
-        print("Writing annotated image to '%s'..." % img_annotated_file)
-        cv2.imwrite(img_annotated_file, img_annotated)
-
-    # JSON processing done if not doing image only
-    if not options.image_only:
+    # Write out crops and respective JSON
+    for i, crop in enumerate(crops):
+        input_id = os.path.splitext(os.path.basename(image_filename))[0]
+        out_file = os.path.join(options.output_dir, input_id)
+        json_file = "%s_crop%i.json" % (out_file, i)
+        crop_file = "%s_crop%i.jpg"  % (out_file, i)
+        print("Writing crop #%s to '%s'..." % (i, crop_file))
+        cv2.imwrite(crop_file, crop)
+        # JSON processing done if not doing image only
         data = {
-            "bib": {
-                "regions": detections,
-                "elapsed_time": elapsed_time
-            }
+            "regions": predictions[i],
+            "elapsed_time": elapsed_time
         }
-        json_filename = "%s/%s.json" % (
-            options.output_dir,
-            os.path.splitext(input_file_basename)[0]
-        )
-        print("Writing JSON to '%s'..." % json_filename)
-        with open(json_filename, 'w') as outfile:
-             json.dump(data, outfile)
+        print("Writing JSON to '%s'..." % json_file)
+        with open(json_file, 'w') as outfile:
+            json.dump(data, outfile)
 
 def main():
     """Main program entry point"""
@@ -390,18 +431,18 @@ def main():
     if not check_options(options):
         return
 
-    # Load config
-    config = load_config(options.config_file)
-
     if not os.path.exists(options.output_dir):
         os.makedirs(options.output_dir)
+
+    # Load configs
+    config = load_config(options.config_file)
 
     # Load in the models
     models = configure_keras_models(config)
 
     # Process every image
     for image in glob("%s/*.jpg" % options.input_dir):
-        process_image(image, config, options, models)
+        process_image(image, options, config, models)
 
 # Start of script
 if __name__ == '__main__':
