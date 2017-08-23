@@ -49,9 +49,9 @@ person_detect:
 bib_detect:
 	$(info Running bib detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/person -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB)
+	python detect.py -i $(OUT_DIR)/person -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB) -t bib
 else
-	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB)
+	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB) -t bib
 endif
 
 person_aggregate:
@@ -61,9 +61,9 @@ person_aggregate:
 text_detect:
 	$(info Running text detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/aggregate -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT)
+	python detect.py -i $(OUT_DIR)/aggregate -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT) -t text
 else
-	python detect.py -i $(OUT_DIR)/bib -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT)
+	python detect.py -i $(OUT_DIR)/bib -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT) -t text
 endif
 
 text_recognise:
