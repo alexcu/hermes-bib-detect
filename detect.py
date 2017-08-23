@@ -41,6 +41,7 @@ OPTS_PARSER = OptionParser()
 OPTS_PARSER.add_option("-i", dest="input_dir", help="Input directory to process")
 OPTS_PARSER.add_option("-o", dest="output_dir", help="Directory to put output")
 OPTS_PARSER.add_option("-c", dest="config_file", help="Pickle config file")
+OPTS_PARSER.add_option("-t", dest="type_of_prediction", help="Type of prediction (bib or text)")
 
 # TODO: Move person detection using YOLO darknet into this pipeline...
 
@@ -393,6 +394,9 @@ def process_image(image_filename, options, config, models):
         print("Cannot read this image properly. Skipping.")
         return
 
+    # JSON processing done if not doing image only
+    type_of_prediction = "text" if options.type_of_prediction == "text" else "bib"
+
     # Run predictions
     start_time = now()
     predictions = [p for p in run_predictions(img, config, models) if p is not None]
@@ -409,8 +413,6 @@ def process_image(image_filename, options, config, models):
 
     # Write out crops into individual files
     for i, crop in enumerate(crops):
-        # JSON processing done if not doing image only
-        type_of_prediction = "text" if "text" in config.model_path else "bib"
         input_id = os.path.splitext(os.path.basename(image_filename))[0]
         out_file = os.path.join(options.output_dir, input_id)
         crop_file = "%s_crop_%s_%i.jpg"  % (out_file, type_of_prediction, i)
