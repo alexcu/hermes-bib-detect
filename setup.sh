@@ -59,7 +59,7 @@ install_tesseract() {
 install_darknet() {
   mkdir $SRC_DIR/bin
   git clone https://github.com/alexcu/darknet.git bin/darknet
-  make bin/darknet
+  make -C bin/darknet
   wget -P bin/darknet https://pjreddie.com/media/files/tiny-yolo-voc.weights
 }
 
