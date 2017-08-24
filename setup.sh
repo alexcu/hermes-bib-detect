@@ -65,7 +65,7 @@ install_darknet() {
 
 install_python3() {
   sudo apt-get install -y python3-pip python3-dev
-  pip install --upgrade pip
+  pip3 install --upgrade pip
 }
 
 install_opencv() {
