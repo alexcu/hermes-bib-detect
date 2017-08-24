@@ -50,29 +50,29 @@ prepare:
 	$(call check_defined, TESSERACT_BIN_DIR, directory to Tesseract binary)
 	$(call check_defined, TESSDATA_DIR, tessdata directory)
 	$(call check_defined, CROP_PEOPLE, whether to crop people -- should be 0 or 1)
-	$(info Running mogrify on all input images to ensure auto-orientation...)
-	mogrify -auto-orient $(IN_DIR)/*.jpg
 	$(info Creating output directory at $(OUT_DIR)...)
 	rm -rf $(OUT_DIR)/$(JOB_ID)
 	mkdir -p $(OUT_DIR)/$(JOB_ID)
 	cp -r $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/input
+	$(info Running mogrify on all input images to ensure auto-orientation...)
+	mogrify -auto-orient $(OUT_DIR)/$(JOB_ID)/input/*.jpg
 # TODO: Copy over if any argus files in there into gt.json
 
 person_detect:
 	$(info Running person detection...)
-	./person_detect.rb $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/person $(DARKNET_DIR) -c
+	./person_detect.rb $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/person $(DARKNET_DIR) -c
 
 bib_detect:
 	$(info Running bib detection...)
 ifeq ($(CROP_PEOPLE),1)
 	python3 detect.py -i $(OUT_DIR)/$(JOB_ID)/out/person -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 else
-	python3 detect.py -i $(IN_DIR) -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
+	python3 detect.py -i $(OUT_DIR)/$(JOB_ID)/input -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 endif
 
 person_aggregate:
 	$(info Running aggregation of cropped people...)
-	python3 person_aggregate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/aggregate $(OUT_DIR)/$(JOB_ID)/out/bib $(OUT_DIR)/$(JOB_ID)/out/person
+	python3 person_aggregate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/aggregate $(OUT_DIR)/$(JOB_ID)/out/bib $(OUT_DIR)/$(JOB_ID)/out/person
 
 text_detect:
 	$(info Running text detection...)
@@ -89,9 +89,9 @@ text_recognise:
 annotate:
 	$(info Annotating final output...)
 ifeq ($(CROP_PEOPLE),1)
-	python3 annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
+	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
 else
-	python3 annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
+	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
 endif
 
 measure_accuracy:
