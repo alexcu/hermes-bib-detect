@@ -4,6 +4,10 @@ This script detects bibs for images in a given directory. These images can
 either be original raw images or cropped images using the person detection
 [script](https://github.com/alexcu/hermes-training-utils/blob/master/person_detect.rb).
 
+## Installing
+
+Use the `setup.sh` script to install.
+
 ## Usage
 
 Run the scripts in the following order:
@@ -20,6 +24,7 @@ To run the pipeline:
 
 ```
 make run \
+  JOB_ID=unique_job_id
   IN_DIR=/path/to/input/images \
   OUT_DIR=/path/to/output \
   DARKNET_DIR=/path/to/darknet \
