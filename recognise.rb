@@ -1,14 +1,12 @@
 #!/usr/bin/env ruby
 
 #
-# Script to recognise text using Tesseract v4.0-alpha
+# Script to recognise text using Tesseract v3
 #
 # Usage:
 # recognise.rb /path/to/input/dir \
 #              /path/to/output/dir \
 #              /path/to/tesseract/bin
-#              /path/to/tessdata
-#
 #
 
 require 'json'
@@ -42,7 +40,7 @@ def process_line(file, line)
   }
 end
 
-def proc_files(in_dir, out_dir, tesseract_dir, tessdata_dir)
+def proc_files(in_dir, out_dir, tesseract_dir)
   # Pass this into stdin for darknet (i.e., all files we want to test)
   char_regions = {}
   Dir["#{in_dir}/*.jpg"].each do |file|
@@ -56,10 +54,8 @@ def proc_files(in_dir, out_dir, tesseract_dir, tessdata_dir)
       stdout
       quiet
       makebox
-      --psm 10
-      --oem 1
-      --tessdata-dir "#{tessdata_dir}"
-      -c tessedit_char_whitelist="0123456789"
+      --psm 8
+      -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789"
     ).join(' ')
     puts "Running tesseract on #{file}..."
     start = Time.now
@@ -97,12 +93,9 @@ def main
   tesseract_dir = ARGV[2]
   raise 'Path to tesseract missing' if tesseract_dir.nil?
 
-  tessdata_dir = ARGV[3]
-  raise 'Path to tessdata missing' if tessdata_dir.nil?
-
   FileUtils.mkdir_p(out_dir) unless Dir.exist?(out_dir)
 
-  proc_files(in_dir, out_dir, tesseract_dir, tessdata_dir)
+  proc_files(in_dir, out_dir, tesseract_dir)
 end
 
 main
