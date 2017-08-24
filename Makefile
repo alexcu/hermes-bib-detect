@@ -35,7 +35,6 @@ prepare:
 	$(call check_defined, PICKLE_CONFIG_BIB, bib pickle config file)
 	$(call check_defined, PICKLE_CONFIG_TXT, text pickle config file)
 	$(call check_defined, TESSERACT_BIN_DIR, directory to Tesseract binary)
-	$(call check_defined, TESSDATA_DIR, tessdata directory)
 	$(call check_defined, CROP_PEOPLE, whether to crop people -- should be 0 or 1)
 	$(info Creating output directory at $(OUT_DIR)...)
 	rm -rf $(OUT_DIR)/$(JOB_ID)
@@ -71,7 +70,8 @@ endif
 
 text_recognise:
 	$(info Running text recognition...)
-	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(TESSERACT_BIN_DIR) $(TESSDATA_DIR)
+	python3 preprocess.py $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/preprocessed
+	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/preprocessed $(OUT_DIR)/$(JOB_ID)/out/chars $(TESSERACT_BIN_DIR)
 
 annotate:
 	$(info Annotating final output...)
