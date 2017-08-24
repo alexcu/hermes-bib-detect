@@ -3,7 +3,7 @@
 SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 check_pip3_dependency() {
-  if [ $( pip3 list | grep "$1" | wc -l ) -ne 1 ]; then
+  if [ $( pip3 list | grep "$1" | wc -l ) -eq 0 ]; then
     return 1
   else
     return 0
@@ -11,7 +11,7 @@ check_pip3_dependency() {
 }
 
 check_system_dependency() {
-  if [ $( which $1 | wc -l ) -ne 1 ]; then
+  if [ $( which $1 | wc -l ) -eq 0 ]; then
     return 1
   else
     return 0
@@ -27,7 +27,7 @@ check_lib_dependency() {
 }
 
 check_ruby_dependency() {
-  if [ $( gem list | grep "$1" | wc -l ) -ne 1 ]; then
+  if [ $( gem list | grep "$1" | wc -l ) -eq 0 ]; then
     return 1
   else
     return 0
@@ -49,11 +49,11 @@ announce_success() {
 }
 
 install_git() {
-  sudo apt-get install git
+  sudo apt-get install -y git
 }
 
 install_tesseract() {
-  sudo apt-get install tesseract-ocr
+  sudo apt-get install -y tesseract-ocr
 }
 
 install_darknet() {
@@ -64,7 +64,7 @@ install_darknet() {
 }
 
 install_python3() {
-  sudo apt-get install python3-pip python3-dev
+  sudo apt-get install -y python3-pip python3-dev
 }
 
 install_opencv() {
@@ -84,11 +84,11 @@ install_h5py() {
 }
 
 install_ruby() {
-  sudo apt-get install ruby ruby-all-dev
+  sudo apt-get install -y ruby ruby-all-dev
 }
 
 install_imagemagick() {
-  sudo apt-get install imagemagick libmagickcore-dev libmagickwand-dev
+  sudo apt-get install -y imagemagick libmagickcore-dev libmagickwand-dev
 }
 
 install_rmagick() {
@@ -101,7 +101,7 @@ check_darknet_installed                     || install_darknet     &&
 check_system_dependency "python3"           || install_python3     &&
 check_system_dependency "pip3"              || install_python3     &&
 check_pip3_dependency   "opencv-python"     || install_opencv      &&
-check_pip3_dependency   "keras"             || install_keras       &&
+check_pip3_dependency   "Keras"             || install_keras       &&
 check_pip3_dependency   "tensorflow"        || install_tensorflow  &&
 check_pip3_dependency   "h5py"              || install_h5py        &&
 check_system_dependency "ruby"              || install_ruby        &&
