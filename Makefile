@@ -39,43 +39,61 @@ run: prepare \
 endif
 
 prepare:
+	$(call check_defined, JOB_ID, job identifier)
+	$(call check_defined, IN_DIR, input directory)
+	$(call check_defined, OUT_DIR, output directory)
+	$(call check_defined, DARKNET_DIR, directory to Darknet)
+	$(call check_defined, PICKLE_CONFIG_BIB, bib pickle config file)
+	$(call check_defined, PICKLE_CONFIG_TXT, text pickle config file)
+	$(call check_defined, TESSERACT_BIN_DIR, directory to Tesseract binary)
+	$(call check_defined, TESSDATA_DIR, tessdata directory)
+	$(call check_defined, CROP_PEOPLE, whether to crop people -- should be 0 or 1)
 	$(info Running mogrify on all input images to ensure auto-orientation...)
 	mogrify -auto-orient $(IN_DIR)/*.jpg
 	$(info Creating output directory at $(OUT_DIR)...)
-	mkdir -p $(OUT_DIR)
+	rm -rf $(OUT_DIR)/$(JOB_ID)
+	mkdir -p $(OUT_DIR)/$(JOB_ID)
+	cp -r $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/input
+# TODO: Copy over if any argus files in there into gt.json
 
 person_detect:
 	$(info Running person detection...)
-	./person_detect.rb $(IN_DIR) $(OUT_DIR)/person $(DARKNET_DIR) -c
+	./person_detect.rb $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/person $(DARKNET_DIR) -c
 
 bib_detect:
 	$(info Running bib detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/person -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB) -t bib
+	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/person -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 else
-	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/bib -c $(PICKLE_CONFIG_BIB) -t bib
+	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 endif
 
 person_aggregate:
 	$(info Running aggregation of cropped people...)
-	python person_aggregate.py $(IN_DIR) $(OUT_DIR)/aggregate $(OUT_DIR)/bib $(OUT_DIR)/person
+	python person_aggregate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/aggregate $(OUT_DIR)/$(JOB_ID)/out/bib $(OUT_DIR)/$(JOB_ID)/out/person
 
 text_detect:
 	$(info Running text detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/aggregate -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT) -t text
+	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/aggregate -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
 else
-	python detect.py -i $(OUT_DIR)/bib -o$(OUT_DIR)/text -c $(PICKLE_CONFIG_TXT) -t text
+	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/bib -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
 endif
 
 text_recognise:
 	$(info Running text recognition...)
-	./recognise.rb $(OUT_DIR)/text $(OUT_DIR)/chars $(TESSERACT_BIN_DIR) $(TESSDATA_DIR)
+	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(TESSERACT_BIN_DIR) $(TESSDATA_DIR)
 
 annotate:
 	$(info Annotating final output...)
 ifeq ($(CROP_PEOPLE),1)
-	python annotate.py $(IN_DIR) $(OUT_DIR)/annotated $(OUT_DIR)/text $(OUT_DIR)/chars $(OUT_DIR)/aggregate
+	python annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
 else
-	python annotate.py $(IN_DIR) $(OUT_DIR)/annotated $(OUT_DIR)/text $(OUT_DIR)/chars $(OUT_DIR)/bib
+	python annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
 endif
+
+measure_accuracy:
+	$(error TODO)
+# Check out/job_id/gt.json file (made from prepare)
+# if not exist, error
+# if exist then run measure_accuracy with file and spit out out/accuracy.json
