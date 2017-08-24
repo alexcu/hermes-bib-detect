@@ -10,16 +10,20 @@ __check_defined = \
     $(if $(value $1),, \
       $(error Undefined $1$(if $2, ($2))))
 
-# Check for required arguments
-$(call check_defined, IN_DIR, input directory)
-$(call check_defined, OUT_DIR, output directory)
-$(call check_defined, DARKNET_DIR, directory to Darknet)
-$(call check_defined, PICKLE_CONFIG_BIB, bib pickle config file)
-$(call check_defined, PICKLE_CONFIG_TXT, text pickle config file)
-$(call check_defined, TESSERACT_BIN_DIR, directory to Tesseract binary)
-$(call check_defined, TESSDATA_DIR, tessdata directory)
-$(call check_defined, CROP_PEOPLE, whether to crop people -- should be 0 or 1)
-$(info Running hermes...)
+setup:
+	$(info Cloining required dependencies...)
+	sudo apt-get install git tesseract-ocr
+	git clone https://github.com/alexcu/darknet.git bin/darknet
+	make bin/darknet
+	wget -P bin/darknet https://pjreddie.com/media/files/tiny-yolo-voc.weights
+	$(info Installing python dependencies from pip...)
+	sudo apt-get install python3-pip python3-dev
+	pip3 install opencv-python keras tensorflow
+	$(info Installing ruby & imagemagick dependencies...)
+	sudo apt-get install imagemagick libmagickcore-dev libmagickwand-dev ruby-all-dev
+	gem install rmagick
+
+
 
 # Conditionally configure run based on whether we want to crop people
 ifeq ($(CROP_PEOPLE),1)
