@@ -28,9 +28,9 @@ check_ruby_dependency() {
 
 check_darknet_installed() {
   if [ -d "$SRC_DIR/bin/darknet" ]; then
-    return 1
-  else
     return 0
+  else
+    return 1
   fi
 }
 
