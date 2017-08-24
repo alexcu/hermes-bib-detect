@@ -18,6 +18,14 @@ check_system_dependency() {
   fi
 }
 
+check_lib_dependency() {
+  if [ $( dpkg-query -l "$1" | grep "$1" | wc -l ) -ne 1 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
 check_ruby_dependency() {
   if [ $( gem list | grep "$1" | wc -l ) -ne 1 ]; then
     return 1
@@ -87,16 +95,18 @@ install_rmagick() {
   sudo gem install rmagick
 }
 
-check_system_dependency "git"           || install_git         &&
-check_system_dependency "tesseract"     || install_tesseract   &&
-check_darknet_installed                 || install_darknet     &&
-check_system_dependency "python3"       || install_python3     &&
-check_system_dependency "pip3"          || install_python3     &&
-check_pip3_dependency   "opencv-python" || install_opencv      &&
-check_pip3_dependency   "keras"         || install_keras       &&
-check_pip3_dependency   "tensorflow"    || install_tensorflow  &&
-check_pip3_dependency   "h5py"          || install_h5py        &&
-check_system_dependency "ruby"          || install_ruby        &&
-check_system_dependency "convert"       || install_imagemagick &&
-check_ruby_dependency   "rmagick"       || install_rmagick     &&
+check_system_dependency "git"               || install_git         &&
+check_system_dependency "tesseract"         || install_tesseract   &&
+check_darknet_installed                     || install_darknet     &&
+check_system_dependency "python3"           || install_python3     &&
+check_system_dependency "pip3"              || install_python3     &&
+check_pip3_dependency   "opencv-python"     || install_opencv      &&
+check_pip3_dependency   "keras"             || install_keras       &&
+check_pip3_dependency   "tensorflow"        || install_tensorflow  &&
+check_pip3_dependency   "h5py"              || install_h5py        &&
+check_system_dependency "ruby"              || install_ruby        &&
+check_system_dependency "convert"           || install_imagemagick &&
+check_lib_dependency    "libmagickcore-dev" || install_imagemagick &&
+check_lib_dependency    "libmagickwand-dev" || install_imagemagick &&
+check_ruby_dependency   "rmagick"           || install_rmagick     &&
 announce_success
