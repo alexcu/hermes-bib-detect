@@ -178,7 +178,7 @@ def extract_bib_regions(image_filename, bib_json_dir, person_json_dir):
                     bib_regions_to_add.append(union(r1, r2))
     bib_regions = [r for r in bib_regions if r not in bib_regions_to_remove] + bib_regions_to_add
     # Ensure unique only!!
-    bib_regions = np.unique(np.array(bib_regions)).tolist()
+    bib_regions = [dict(y) for y in set(tuple(x.items()) for x in bib_regions)]
     return {
         "bib": { "regions": bib_regions, "elapsed_seconds": sum_of_time }
     }
