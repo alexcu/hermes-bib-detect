@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This is a python script to annotate the final output image and produce a final
 JSON output file.

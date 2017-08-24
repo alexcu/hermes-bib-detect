@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This is a python script to aggregate detected bibs from individual person crops
 into one image.

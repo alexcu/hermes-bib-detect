@@ -23,8 +23,6 @@ setup:
 	sudo apt-get install imagemagick libmagickcore-dev libmagickwand-dev ruby-all-dev
 	gem install rmagick
 
-
-
 # Conditionally configure run based on whether we want to crop people
 ifeq ($(CROP_PEOPLE),1)
 run: prepare \
@@ -67,9 +65,9 @@ person_detect:
 bib_detect:
 	$(info Running bib detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/person -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
+	python3 detect.py -i $(OUT_DIR)/$(JOB_ID)/out/person -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 else
-	python detect.py -i $(IN_DIR) -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
+	python3 detect.py -i $(IN_DIR) -o $(OUT_DIR)/$(JOB_ID)/out/bib -c $(PICKLE_CONFIG_BIB) -t bib
 endif
 
 person_aggregate:
@@ -79,9 +77,9 @@ person_aggregate:
 text_detect:
 	$(info Running text detection...)
 ifeq ($(CROP_PEOPLE),1)
-	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/aggregate -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
+	python3 detect.py -i $(OUT_DIR)/$(JOB_ID)/out/aggregate -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
 else
-	python detect.py -i $(OUT_DIR)/$(JOB_ID)/out/bib -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
+	python3 detect.py -i $(OUT_DIR)/$(JOB_ID)/out/bib -o$(OUT_DIR)/$(JOB_ID)/out/text -c $(PICKLE_CONFIG_TXT) -t text
 endif
 
 text_recognise:
@@ -91,9 +89,9 @@ text_recognise:
 annotate:
 	$(info Annotating final output...)
 ifeq ($(CROP_PEOPLE),1)
-	python annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
+	python3 annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
 else
-	python annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
+	python3 annotate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
 endif
 
 measure_accuracy:
