@@ -55,7 +55,6 @@ def proc_files(in_dir, out_dir, tesseract_dir)
       quiet
       makebox
       --psm 8
-      -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789"
     ).join(' ')
     puts "Running tesseract on #{file}..."
     start = Time.now
