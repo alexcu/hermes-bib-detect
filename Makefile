@@ -72,7 +72,7 @@ endif
 
 person_aggregate:
 	$(info Running aggregation of cropped people...)
-	python person_aggregate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/aggregate $(OUT_DIR)/$(JOB_ID)/out/bib $(OUT_DIR)/$(JOB_ID)/out/person
+	python3 person_aggregate.py $(IN_DIR) $(OUT_DIR)/$(JOB_ID)/out/aggregate $(OUT_DIR)/$(JOB_ID)/out/bib $(OUT_DIR)/$(JOB_ID)/out/person
 
 text_detect:
 	$(info Running text detection...)
