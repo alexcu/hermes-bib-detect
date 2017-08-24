@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 check_pip3_dependency() {
   if [ $( pip3 list | grep "$1" | wc -l ) -ne 1 ]; then
     return 1
@@ -25,7 +27,6 @@ check_ruby_dependency() {
 }
 
 check_darknet_installed() {
-  SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   if [ -d "$SRC_DIR/bin/darknet" ]; then
     return 1
   else
@@ -34,7 +35,6 @@ check_darknet_installed() {
 }
 
 announce_success() {
-  SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   echo "Success!"
   echo "  - Your DARKNET_DIR is: $SRC_DIR/bin/darknet"
   echo "  - Your TESSERACT_BIN_DIR is: $(dirname $(which tesseract))"
@@ -49,6 +49,7 @@ install_tesseract() {
 }
 
 install_darknet() {
+  mkdir $SRC_DIR/bin
   git clone https://github.com/alexcu/darknet.git bin/darknet
   make bin/darknet
   wget -P bin/darknet https://pjreddie.com/media/files/tiny-yolo-voc.weights
@@ -90,6 +91,7 @@ check_system_dependency "git"           || install_git         &&
 check_system_dependency "tesseract"     || install_tesseract   &&
 check_darknet_installed                 || install_darknet     &&
 check_system_dependency "python3"       || install_python3     &&
+check_system_dependency "pip3"          || install_python3     &&
 check_pip3_dependency   "opencv-python" || install_opencv      &&
 check_pip3_dependency   "keras"         || install_keras       &&
 check_pip3_dependency   "tensorflow"    || install_tensorflow  &&
