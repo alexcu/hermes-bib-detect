@@ -63,12 +63,12 @@ def main():
         img = cv2.imread(file)
         image_id = os.path.splitext(os.path.basename(file))[0]
         out_jpeg_file = ("%s/%s.jpg" % (out_dir, image_id))
-        cv2.imwrite(out_dir, preprocess(img))
+        cv2.imwrite(out_jpeg_file, preprocess(img))
 
     for file in glob("%s/*.json" % in_dir):
         image_id = os.path.splitext(os.path.basename(file))[0]
         out_json_file = ("%s/%s.json" % (out_dir, image_id))
-        shutil.copy(file, image_id)
+        shutil.copy(file, out_json_file)
 
 if __name__ == '__main__':
     main()
