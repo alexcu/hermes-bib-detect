@@ -50,11 +50,11 @@ def proc_files(in_dir, out_dir, tesseract_dir)
     }
     cmd = %W(
       ./tesseract
+      -psm 8
       "#{file}"
       stdout
       quiet
       makebox
-      --psm 8
     ).join(' ')
     puts "Running tesseract on #{file}..."
     start = Time.now
