@@ -68,20 +68,8 @@ install_python3() {
   pip3 install --upgrade pip
 }
 
-install_opencv() {
-  pip3 install opencv-python
-}
-
-install_keras() {
-  pip3 install keras
-}
-
-install_tensorflow() {
-  pip3 install tensorflow
-}
-
-install_h5py() {
-  pip3 install h5py
+install_python_libs() {
+ pip3 install -r requirements.txt
 }
 
 install_ruby() {
@@ -101,13 +89,10 @@ check_system_dependency "tesseract"         || install_tesseract   &&
 check_darknet_installed                     || install_darknet     &&
 check_system_dependency "python3"           || install_python3     &&
 check_system_dependency "pip3"              || install_python3     &&
-check_pip3_dependency   "opencv-python"     || install_opencv      &&
-check_pip3_dependency   "Keras"             || install_keras       &&
-check_pip3_dependency   "tensorflow"        || install_tensorflow  &&
-check_pip3_dependency   "h5py"              || install_h5py        &&
 check_system_dependency "ruby"              || install_ruby        &&
 check_system_dependency "convert"           || install_imagemagick &&
 check_lib_dependency    "libmagickcore-dev" || install_imagemagick &&
 check_lib_dependency    "libmagickwand-dev" || install_imagemagick &&
 check_ruby_dependency   "rmagick"           || install_rmagick     &&
+install_python_libs                                                &&
 announce_success
