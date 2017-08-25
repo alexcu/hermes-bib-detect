@@ -157,7 +157,7 @@ def extract_bib_regions(image_filename, bib_json_dir, person_json_dir):
             bib_region["y2"] += py1
 
     # Now strip out all bib regions in the entire photo for every runner
-    bib_regions = np.hstack([pr["bib_regions"] for pr in person_regions])
+    bib_regions = np.hstack([pr["bib_regions"] for pr in person_regions if len(pr["bib_regions"]) > 0])
     sum_of_time = np.sum([pr["bib_elapsed_seconds"] for pr in person_regions])
 
     # Go through every bib region we have, and see if any bibs overlap.
