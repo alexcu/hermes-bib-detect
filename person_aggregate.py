@@ -139,6 +139,9 @@ def extract_bib_regions(image_filename, bib_json_dir, person_json_dir):
         # These are the person's coordinates in the ORIGINAL image
         px1, py1 = (person_region["x1"], person_region["y1"])
         bib_filename = "%s/%s_crop_person_%i.json" % (bib_json_dir, image_id, i)
+        if not os.path.exists(bib_filename):
+            print("No such crop at '%s'. Skipping..." % bib_filename)
+            continue
         json = read_json(bib_filename)
         person_region["bib_regions"] = json["bib"]["regions"]
         person_region["bib_elapsed_seconds"] = json["bib"]["elapsed_seconds"]
