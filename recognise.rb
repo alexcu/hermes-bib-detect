@@ -15,11 +15,13 @@ require 'fileutils'
 require 'matrix'
 require 'rmagick'
 
+CHAR_WHITELIST = "^A-Z0-9\-".freeze
+
 def process_line(file, line)
   re = /^([^\s]+)\s(\d+)\s(\d+)\s(\d+)\s(\d+)\s\d+$/
   matches = re.match(line)
   return nil if matches.nil?
-  char = matches[1]
+  char = matches[1].tr(CHAR_WHITELIST, '')
   # NOTE: Coordinate system of tesseract has (0,0) in BOTTOM-LEFT not TOP-LEFT!
   # So we convert (x,y) -> (x,h-y)
   x1 = matches[2].to_i
@@ -41,21 +43,27 @@ def process_line(file, line)
 end
 
 def proc_files(in_dir, out_dir, tesseract_dir)
-  # Pass this into stdin for darknet (i.e., all files we want to test)
-  char_regions = {}
+  string_regions = {}
   Dir["#{in_dir}/*.jpg"].each do |file|
-    unique_image_id = File.basename(file, '.jpg')
-    char_regions[unique_image_id] = {
-      char: { regions: [], string: '' }
-    }
-    cmd = %W(
+    matches = File.basename(file).match(/([^\.]+)\.pp(\d)\.jpg/)
+    next if matches[1].nil?
+    unique_image_id = matches[1]
+    p_id = matches[2].to_i
+    if string_regions[unique_image_id].nil?
+      string_regions[unique_image_id] = {
+        ocr: []
+      }
+    end
+    string_regions[unique_image_id][:ocr][p_id] = { regions: [], string: '' }
+    # PSM of 8 recommended for text regions
+    cmd = %W[
       ./tesseract
       -psm 8
       "#{file}"
       stdout
       quiet
       makebox
-    ).join(' ')
+    ].join(' ')
     puts "Running tesseract on #{file}..."
     start = Time.now
     Open3.popen2e(cmd, chdir: tesseract_dir) do |stdin, stdoe|
@@ -64,18 +72,26 @@ def proc_files(in_dir, out_dir, tesseract_dir)
         puts line
         data = process_line(file, line)
         next if data.nil?
-        char_regions[unique_image_id][:char][:regions] << data
-        char_regions[unique_image_id][:char][:string] << data[:char]
+        string_regions[unique_image_id][:ocr][p_id][:regions] << data
+        string_regions[unique_image_id][:ocr][p_id][:string] << data[:char]
       end
     end
-    char_regions[unique_image_id][:char][:elappsed_seconds] = (Time.now() - start)
+    string_regions[unique_image_id][:ocr][p_id][:elappsed_seconds] = (Time.now - start)
   end
   puts 'Tesseract has fininshed!'
-  char_regions.each do |id, hash|
-    next if hash[:char][:string].empty?
+  string_regions.each do |id, hash|
+    # Any two processed ocr are the same? Merge as one.
+    hash[:ocr].uniq! { |e| e[:string] }
+    next if hash[:ocr].nil? || hash[:ocr].empty?
+    # Only keep recognition for whitelist characters
+    out_hash = hash[:ocr].reject do |proc_hash|
+      proc_hash[:regions].empty? || proc_hash[:string].empty? #|| (proc_hash[:string] =~ CHAR_WHITELIST).nil?
+    end
+    next if out_hash.empty?
+    out_hash = { ocr: out_hash } # Wrap in ocr
     out_file = "#{out_dir}/#{id}.json"
     puts "Writing JSON to '#{id}' to '#{out_file}'..."
-    json_str = JSON.dump(hash)
+    json_str = JSON.dump(out_hash)
     fp = File.new(out_file, 'w')
     fp.write(json_str)
     fp.close

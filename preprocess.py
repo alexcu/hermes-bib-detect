@@ -21,16 +21,16 @@ def preprocess(img):
 
     Args:
         img (cv2 image): The image to preprocess
-    Returns
-        cv2 image: The preprocessed image.
+    Returns:
+        dict of cv2 image: The preprocessed images with the keys:
+                           (`gray`, `gray_inv`, `thresh`) for the respective
+                           images.
     """
 
     # gray scale
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # gray scale inverted
     img_gray_inv = cv2.bitwise_not(img_gray)
-    # blurring to increase edges and color contrast:'gaussian convolution' with a kernel
-    img_blur = cv2.GaussianBlur(img_gray_inv,ksize=(5,5),sigmaX=0,sigmaY=0)
 
     # statistical flag for white versus black ID: median
     flag_background = np.median(img_gray)
@@ -44,7 +44,7 @@ def preprocess(img):
         _, threshold = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY)
 
     # Return the processed image image
-    return threshold
+    return { 'gray': img_gray, 'gray_inv': img_gray_inv, 'thresh': threshold }
 
 def main():
     assert len(sys.argv) - 1 >= 2, "Must provide two arguments (in_dir, out_dir)"
@@ -62,8 +62,10 @@ def main():
         print("Processing '%s' for thresholding..." % file)
         img = cv2.imread(file)
         image_id = os.path.splitext(os.path.basename(file))[0]
-        out_jpeg_file = ("%s/%s.jpg" % (out_dir, image_id))
-        cv2.imwrite(out_jpeg_file, preprocess(img))
+        preprocessed = [v for v in preprocess(img).values()]
+        for i, ppimg in enumerate(preprocessed):
+            out_jpeg_file = ("%s/%s.pp%s.jpg" % (out_dir, image_id, i))
+            cv2.imwrite(out_jpeg_file, ppimg)
 
     for file in glob("%s/*.json" % in_dir):
         image_id = os.path.splitext(os.path.basename(file))[0]

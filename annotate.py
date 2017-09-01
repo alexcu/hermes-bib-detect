@@ -8,7 +8,7 @@ Usage:
     python annotate.py /path/to/input/files \
                        /path/to/output \
                        /path/to/text/crops \
-                       /path/to/chars/bboxes \
+                       /path/to/ocr/bboxes \
                        /path/to/aggregate|bib
 
     If no aggregate dir exists (i.e., NOT cropping on a person), then
@@ -26,7 +26,7 @@ import json
 import numpy as np
 import re
 
-def annotate_image(img, bib_bbox, string, bib_accuracy, txt_accuracy):
+def annotate_bib_squares(img, bib_bbox, string, bib_accuracy, txt_accuracy):
     """Annotates an image given the bounding box of the bib region.
     Args:
         img (cv2 image): Image read by cv2.
@@ -46,6 +46,12 @@ def annotate_image(img, bib_bbox, string, bib_accuracy, txt_accuracy):
     x2 = bib_bbox["x2"]
     y2 = bib_bbox["y2"]
     cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
+    return img
+
+def annotate_number_labels(img, bib_bbox, string, bib_accuracy, txt_accuracy):
+    lime = (0,255,0)
+    black = (0,0,0)
+    font = cv2.FONT_HERSHEY_PLAIN
     # labels for accuracy (overlay)
     x1 = bib_bbox["x1"]
     y1 = bib_bbox["y1"]
@@ -71,7 +77,7 @@ def read_json(json_filename):
     return json_data
 
 def main():
-    assert len(sys.argv) - 1 >= 5, "Must provide 5 arguments (in_dir, out_dir, text_dir, chars_dir, aggregate_dir)"
+    assert len(sys.argv) - 1 >= 5, "Must provide 5 arguments (in_dir, out_dir, text_dir, ocr_dir, aggregate_dir)"
 
     in_dir = sys.argv[1]
     assert in_dir != None, "Missing input directory (argv[1])"
@@ -82,11 +88,11 @@ def main():
     text_dir = sys.argv[3]
     assert text_dir != None, "Missing text directory (argv[3])"
 
-    chars_dir = sys.argv[4]
-    assert chars_dir != None, "Missing chars directory (argv[4])"
+    ocr_dir = sys.argv[4]
+    assert ocr_dir != None, "Missing string directory (argv[4])"
 
     aggregate_dir = sys.argv[5]
-    assert chars_dir != None, "Missing aggregate directory (argv[4])"
+    assert ocr_dir != None, "Missing aggregate directory (argv[4])"
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -101,12 +107,13 @@ def main():
             matches = re.search(image_id + "_crop_bib_(\d+).json", text_crop_file)
             bib_idx = int(matches.group(1))
             bib_for_text_crop = aggregate_json["bib"]["regions"][bib_idx]
-            # Attempt to read chars for this text_crop json...
-            chars_bbox_file = "%s/%s_crop_text.json" % (chars_dir, text_crop_id)
-            if not os.path.exists(chars_bbox_file):
-                print("No chars file for '%s'. Skipping..." % text_crop_id)
+            # Attempt to read string for this text_crop json...
+            ocr_bbox_file = "%s/%s_crop_text.json" % (ocr_dir, text_crop_id)
+            if not os.path.exists(ocr_bbox_file):
+                print("No string file for '%s'. Skipping..." % text_crop_id)
                 continue
             # Load the text crops and push them down by the correct origin
+            print text_crop_file
             txt_crop_json = read_json(text_crop_file)
             bib_origin_x1 = bib_for_text_crop["x1"]
             bib_origin_y1 = bib_for_text_crop["y1"]
@@ -115,21 +122,24 @@ def main():
             txt_crop_json["text"]["regions"][0]["x2"] += bib_origin_x1
             txt_crop_json["text"]["regions"][0]["y2"] += bib_origin_y1
             # Do the same for each individual character
-            chars_bbox_json = read_json(chars_bbox_file)
-            for char in chars_bbox_json["char"]["regions"]:
-                char["x1"] += txt_crop_json["text"]["regions"][0]["x1"]
-                char["y1"] += txt_crop_json["text"]["regions"][0]["y1"]
-                char["x2"] += txt_crop_json["text"]["regions"][0]["x2"]
-                char["y2"] += txt_crop_json["text"]["regions"][0]["y2"]
+            ocr_bbox_json = read_json(ocr_bbox_file)
+            for ocr in ocr_bbox_json["ocr"]:
+                for region in ocr["regions"]:
+                    region["x1"] += txt_crop_json["text"]["regions"][0]["x1"]
+                    region["y1"] += txt_crop_json["text"]["regions"][0]["y1"]
+                    region["x2"] += txt_crop_json["text"]["regions"][0]["x2"]
+                    region["y2"] += txt_crop_json["text"]["regions"][0]["y2"]
             # Now annotate the image and JSON
-            string = chars_bbox_json["char"]["string"]
+            strings = ','.join([ocr["string"] for ocr in ocr_bbox_json["ocr"]])
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
             txt_accuracy = int(txt_crop_json["text"]["regions"][0]["accuracy"] * 100)
-            img = annotate_image(img, bib_bbox, string, bib_accuracy, txt_accuracy)
+            img = annotate_bib_squares(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
+            img = annotate_number_labels(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
             aggregate_json["text"] = txt_crop_json["text"]
-            aggregate_json["char"] = chars_bbox_json["char"]
+            aggregate_json["ocr"] = ocr_bbox_json["ocr"]
         # Now finally spit everything out!
+        print aggregate_json
         if "text" not in aggregate_json:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
             continue
