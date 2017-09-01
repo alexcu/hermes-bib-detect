@@ -142,7 +142,7 @@ def extract_bib_regions(image_filename, bib_json_dir, person_json_dir):
         if not os.path.exists(bib_filename):
             print("No such crop at '%s'. Skipping..." % bib_filename)
             person_region["bib_regions"] = []
-            person_region["bib_elapsed_seconds"] = 0
+            person_region["bib_elapsed_seconds"] = float(0)
             continue
         json = read_json(bib_filename)
         person_region["bib_regions"] = json["bib"]["regions"]
@@ -157,8 +157,12 @@ def extract_bib_regions(image_filename, bib_json_dir, person_json_dir):
             bib_region["y2"] += py1
 
     # Now strip out all bib regions in the entire photo for every runner
-    bib_regions = np.hstack([pr["bib_regions"] for pr in person_regions if len(pr["bib_regions"]) > 0])
-    sum_of_time = np.sum([pr["bib_elapsed_seconds"] for pr in person_regions])
+    bib_regions = [pr["bib_regions"] for pr in person_regions
+                   if len(pr["bib_regions"]) > 0]
+    if len(bib_regions) > 0:
+        # Concatenate all bib regions (if any) in a single numpy array
+        bib_regions = np.hstack(bib_regions)
+    sum_of_time = float(np.sum([pr["bib_elapsed_seconds"] for pr in person_regions]))
 
     # Go through every bib region we have, and see if any bibs overlap.
     # If they do, then use the union of both.
