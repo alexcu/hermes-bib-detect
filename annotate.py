@@ -140,7 +140,7 @@ def main():
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
             txt_accuracy = int(txt_crop_json["text"]["regions"][0]["accuracy"] * 100)
-            img = annotate_bib_squares(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
+            img = annotate_bib_squares(img, bib_bbox)
             img = annotate_number_labels(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
             aggregate_json["text"] = txt_crop_json["text"]
             aggregate_json["ocr"] = ocr_bbox_json["ocr"]
