@@ -71,14 +71,14 @@ endif
 text_recognise:
 	$(info Running text recognition...)
 	python3 preprocess.py $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/preprocessed
-	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/preprocessed $(OUT_DIR)/$(JOB_ID)/out/chars $(TESSERACT_BIN_DIR)
+	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/preprocessed $(OUT_DIR)/$(JOB_ID)/out/ocr $(TESSERACT_BIN_DIR)
 
 annotate:
 	$(info Annotating final output...)
 ifeq ($(CROP_PEOPLE),1)
-	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/aggregate
+	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/ocr $(OUT_DIR)/$(JOB_ID)/out/aggregate
 else
-	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/chars $(OUT_DIR)/$(JOB_ID)/out/bib
+	python3 annotate.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/annotated $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/ocr $(OUT_DIR)/$(JOB_ID)/out/bib
 endif
 
 measure_accuracy:
