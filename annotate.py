@@ -96,10 +96,10 @@ def main():
     assert text_dir != None, "Missing text directory (argv[3])"
 
     ocr_dir = sys.argv[4]
-    assert ocr_dir != None, "Missing string directory (argv[4])"
+    assert ocr_dir != None, "Missing ocr directory (argv[4])"
 
     aggregate_dir = sys.argv[5]
-    assert ocr_dir != None, "Missing aggregate directory (argv[4])"
+    assert aggregate_dir != None, "Missing aggregate directory (argv[4])"
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -120,7 +120,6 @@ def main():
                 print("No string file for '%s'. Skipping..." % text_crop_id)
                 continue
             # Load the text crops and push them down by the correct origin
-            print text_crop_file
             txt_crop_json = read_json(text_crop_file)
             bib_origin_x1 = bib_for_text_crop["x1"]
             bib_origin_y1 = bib_for_text_crop["y1"]
@@ -146,7 +145,6 @@ def main():
             aggregate_json["text"] = txt_crop_json["text"]
             aggregate_json["ocr"] = ocr_bbox_json["ocr"]
         # Now finally spit everything out!
-        print aggregate_json
         if "text" not in aggregate_json:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
             continue
