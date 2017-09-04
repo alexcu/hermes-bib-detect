@@ -26,14 +26,11 @@ import json
 import numpy as np
 import re
 
-def annotate_bib_squares(img, bib_bbox, string, bib_accuracy, txt_accuracy):
-    """Annotates an image given the bounding box of the bib region.
+def annotate_bib_squares(img, bib_bbox):
+    """Annotates a bbox on an image given the bounding box of the bib region.
     Args:
         img (cv2 image): Image read by cv2.
         bib_bbox (dict): Bounding box for the bib region.
-        string (string): The string that tesseract read from this bib.
-        bib_accuracy (int): The accuracy of bib detection.
-        txt_accuracy (int): The accuracy of text detection.
     Returns:
         img (cv2 image): Annotated cv2 image.
     """
@@ -49,6 +46,16 @@ def annotate_bib_squares(img, bib_bbox, string, bib_accuracy, txt_accuracy):
     return img
 
 def annotate_number_labels(img, bib_bbox, string, bib_accuracy, txt_accuracy):
+    """Annotates an bbox's label given the bounding box of the bib region.
+    Args:
+        img (cv2 image): Image read by cv2.
+        bib_bbox (dict): Bounding box for the bib region.
+        string (string): The string that tesseract read from this bib.
+        bib_accuracy (int): The accuracy of bib detection.
+        txt_accuracy (int): The accuracy of text detection.
+    Returns:
+        img (cv2 image): Annotated cv2 image.
+    """
     lime = (0,255,0)
     black = (0,0,0)
     font = cv2.FONT_HERSHEY_PLAIN
@@ -57,7 +64,7 @@ def annotate_number_labels(img, bib_bbox, string, bib_accuracy, txt_accuracy):
     y1 = bib_bbox["y1"]
     x2 = bib_bbox["x2"]
     y2 = bib_bbox["y2"]
-    label = "%s [%s%%/%s%%]" % (string, bib_accuracy, txt_accuracy)
+    label = "[%s][b:%s%%,t:%s%%]" % (string, bib_accuracy, txt_accuracy)
     fnt_sz, baseline = cv2.getTextSize(label, font, 1, 1)
     acc_rect_pt1 = (x1, y1 + baseline - 5)
     acc_rect_pt2 = (x1 + fnt_sz[0] + 5, y1 - fnt_sz[1] - 5)
