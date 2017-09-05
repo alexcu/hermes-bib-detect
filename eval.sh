@@ -32,8 +32,8 @@ fi
 JOB_ID="$EVAL_SET-$TRAIN_NO-$CROP_HUM_STR"
 OUT_DIR="/home/alex/out/eval"
 DARKNET_DIR="/home/alex/bin/hermes-bib-detect/bin/darknet"
-PICKLE_CONFIG_TXT="/home/alex/out/models/text/16-08-2017/config.pickle"
-TESSERACT_BIN_DIR="/usr/bin"
+PICKLE_CONFIG_TXT="/home/alex/out/models/text/18-08-2017/config.pickle"
+TESSERACT_BIN_DIR="/home/alex/local/bin"
 CROP_PEOPLE=$CROP_HUM
 
 echo "Evaluating set: $JOB_ID..."
