@@ -58,9 +58,10 @@ def proc_files(in_dir, out_dir, tesseract_dir)
     # PSM of 8 recommended for text regions
     cmd = %W[
       ./tesseract
-      -psm 8
       "#{file}"
       stdout
+      -psm 8
+      -oem 4
       quiet
       makebox
     ].join(' ')
