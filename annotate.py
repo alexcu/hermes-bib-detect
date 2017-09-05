@@ -107,7 +107,11 @@ def main():
     for file in glob("%s/*.jpg" % in_dir):
         image_id = os.path.splitext(os.path.basename(file))[0]
         img = cv2.imread(file)
-        aggregate_json = read_json("%s/%s.json" % (aggregate_dir, image_id))
+        aggregate_json_file = "%s/%s.json" % (aggregate_dir, image_id)
+        if not os.path.exists(aggregate_json_file):
+            print("No aggregate json file for '%s'. Skipping..." % image_id)
+            continue
+        aggregate_json = read_json(aggregate_json_file)
         for text_crop_file in glob("%s/%s*.json" % (text_dir, image_id)):
             text_crop_id = os.path.splitext(os.path.basename(text_crop_file))[0]
             # This maps the text crop back to the respective bib...
