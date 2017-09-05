@@ -111,7 +111,7 @@ def main():
         for text_crop_file in glob("%s/%s*.json" % (text_dir, image_id)):
             text_crop_id = os.path.splitext(os.path.basename(text_crop_file))[0]
             # This maps the text crop back to the respective bib...
-            matches = re.search(image_id + "_crop_bib_(\d+).json", text_crop_file)
+            matches = re.search(re.escape(image_id) + "_crop_bib_(\d+).json", text_crop_file)
             bib_idx = int(matches.group(1))
             bib_for_text_crop = aggregate_json["bib"]["regions"][bib_idx]
             # Attempt to read string for this text_crop json...
