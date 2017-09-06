@@ -22,7 +22,7 @@ def process_line(file, line)
   matches = re.match(line)
   return nil if matches.nil?
   char = matches[1].tr(CHAR_WHITELIST, '')
-  return nil if char.nil?
+  return nil if char.length.zero?
   # NOTE: Coordinate system of tesseract has (0,0) in BOTTOM-LEFT not TOP-LEFT!
   # So we convert (x,y) -> (x,h-y)
   x1 = matches[2].to_i
