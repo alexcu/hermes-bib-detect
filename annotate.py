@@ -139,8 +139,8 @@ def main():
                 for region in ocr["regions"]:
                     region["x1"] += txt_crop_json["text"]["regions"][0]["x1"]
                     region["y1"] += txt_crop_json["text"]["regions"][0]["y1"]
-                    region["x2"] += txt_crop_json["text"]["regions"][0]["x2"]
-                    region["y2"] += txt_crop_json["text"]["regions"][0]["y2"]
+                    region["x2"] += txt_crop_json["text"]["regions"][0]["x1"]
+                    region["y2"] += txt_crop_json["text"]["regions"][0]["y1"]
             # Now annotate the image and JSON
             all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
             strings = ','.join(all_strings)
@@ -153,7 +153,7 @@ def main():
             aggregate_json["ocr"].append(ocr_bbox_json["ocr"])
             aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
         # Now finally spit everything out!
-        if "text" not in aggregate_json:
+        if len(aggregate_json["text"]) == 0 or len(aggregate_json["ocr"]) == 0:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
             continue
         out_json_file = ("%s/%s.json" % (out_dir, image_id))
