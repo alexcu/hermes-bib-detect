@@ -112,6 +112,8 @@ def main():
             print("No aggregate json file for '%s'. Skipping..." % image_id)
             continue
         aggregate_json = read_json(aggregate_json_file)
+        aggregate_json["text"] = []
+        aggregate_json["ocr"] = []
         for text_crop_file in glob("%s/%s*.json" % (text_dir, image_id)):
             text_crop_id = os.path.splitext(os.path.basename(text_crop_file))[0]
             # This maps the text crop back to the respective bib...
@@ -140,14 +142,16 @@ def main():
                     region["x2"] += txt_crop_json["text"]["regions"][0]["x2"]
                     region["y2"] += txt_crop_json["text"]["regions"][0]["y2"]
             # Now annotate the image and JSON
-            strings = ','.join([ocr["string"] for ocr in ocr_bbox_json["ocr"]])
+            all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
+            strings = ','.join(all_strings)
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
             txt_accuracy = int(txt_crop_json["text"]["regions"][0]["accuracy"] * 100)
             img = annotate_bib_squares(img, bib_bbox)
             img = annotate_number_labels(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
-            aggregate_json["text"] = txt_crop_json["text"]
-            aggregate_json["ocr"] = ocr_bbox_json["ocr"]
+            aggregate_json["text"].append(txt_crop_json["text"])
+            aggregate_json["ocr"].append(ocr_bbox_json["ocr"])
+            aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
         # Now finally spit everything out!
         if "text" not in aggregate_json:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
