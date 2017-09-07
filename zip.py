@@ -144,6 +144,11 @@ def main():
                     region["y2"] += txt_crop_json["text"]["regions"][0]["y1"]
             # Now annotate the image and JSON
             all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
+            # If there are no string detections (all_strings empty) then
+            # we skip this candidate.
+            if len(all_strings) == 0:
+                print("String detections for for '%s' are empty. Skipping..." % text_crop_id)
+                continue
             strings = ','.join(all_strings)
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
