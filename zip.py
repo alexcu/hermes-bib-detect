@@ -158,7 +158,7 @@ def main():
         # Remove all bib sheet regions that do not have the 'RBN' field -- this
         # We don't want to retain these regions in the aggregate JSON output as
         # as there is no respective RBN for the region.
-        aggregate_json["bib"]["regions"] = [r for r in aggregate_json["bib"] if "rbns" in r]
+        aggregate_json["bib"]["regions"] = [r for r in aggregate_json["bib"]["regions"] if "rbns" in r]
         # Now finally spit everything out!
         if len(aggregate_json["text"]) == 0 or len(aggregate_json["ocr"]) == 0:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
