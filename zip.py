@@ -148,6 +148,9 @@ def main():
             # we skip this candidate.
             if len(all_strings) == 0:
                 print("String detections for for '%s' are empty. Skipping..." % text_crop_id)
+                # We don't want to retain this region in the aggregate JSON
+                # as there is no respective RBN for the region.
+                del aggregate_json["bib"]["regions"][bib_idx]
                 continue
             strings = ','.join(all_strings)
             bib_bbox = bib_for_text_crop
