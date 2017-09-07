@@ -146,12 +146,6 @@ def main():
             all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
             # If there are no string detections (all_strings empty) then
             # we skip this candidate.
-            if len(all_strings) == 0:
-                print("String detections for for '%s' are empty. Skipping..." % text_crop_id)
-                # We don't want to retain this region in the aggregate JSON
-                # as there is no respective RBN for the region.
-                del aggregate_json["bib"]["regions"][bib_idx]
-                continue
             strings = ','.join(all_strings)
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
@@ -161,6 +155,10 @@ def main():
             aggregate_json["text"].append(txt_crop_json["text"])
             aggregate_json["ocr"].append(ocr_bbox_json["ocr"])
             aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
+        # Remove all bib sheet regions that do not have the 'RBN' field -- this
+        # We don't want to retain these regions in the aggregate JSON output as
+        # as there is no respective RBN for the region.
+        aggregate_json["bib"]["regions"] = [r for r in aggregate_json["bib"] if "rbns" in r]
         # Now finally spit everything out!
         if len(aggregate_json["text"]) == 0 or len(aggregate_json["ocr"]) == 0:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
