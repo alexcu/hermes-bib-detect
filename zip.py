@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
 This is a python script to annotate the final output image and produce a final
-JSON output file.
+JSON output file. It's called zip because we zip multiple data sources back
+together again from the original data source.
 
 Usage:
 
-    python annotate.py /path/to/input/files \
-                       /path/to/output \
-                       /path/to/text/crops \
-                       /path/to/ocr/bboxes \
-                       /path/to/aggregate|bib
+    python zip.py /path/to/input/files \
+                  /path/to/output \
+                  /path/to/text/crops \
+                  /path/to/ocr/bboxes \
+                  /path/to/aggregate|bib
 
     If no aggregate dir exists (i.e., NOT cropping on a person), then
     pass in the bib directory for this value instead.
