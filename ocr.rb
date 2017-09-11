@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 
 #
-# Script to recognise text using Tesseract v3
+# Script to recognise text using Tesseract v4 alpha
 #
 # Usage:
-# recognise.rb /path/to/input/dir \
-#              /path/to/output/dir \
-#              /path/to/tesseract/bin
+# ocr.rb /path/to/input/dir \
+#        /path/to/output/dir \
+#        /path/to/tesseract/bin
 #
 
 require 'json'
