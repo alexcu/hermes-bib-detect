@@ -71,7 +71,7 @@ endif
 ocr:
 	$(info Running text recognition...)
 	python3 preprocess.py $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/preprocessed
-	./recognise.rb $(OUT_DIR)/$(JOB_ID)/out/preprocessed $(OUT_DIR)/$(JOB_ID)/out/ocr $(TESSERACT_BIN_DIR)
+	./ocr.rb $(OUT_DIR)/$(JOB_ID)/out/preprocessed $(OUT_DIR)/$(JOB_ID)/out/ocr $(TESSERACT_BIN_DIR)
 
 zip:
 	$(info Annotating final output...)
