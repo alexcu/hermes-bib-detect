@@ -7,10 +7,10 @@ CMD=$4 # Command to run (default to `run')
 
 if [ "$EVAL_SET" == "i" ]; then
   EVAL_SET="I"
-  IN_DIR="/home/alex/data/bibs/eval/1"
+  IN_DIR="/home/alex/data/bibs/eval/i"
 elif [ "$EVAL_SET" == "r" ]; then
   EVAL_SET="R"
-  IN_DIR="/home/alex/data/bibs/eval/2_or_more"
+  IN_DIR="/home/alex/data/bibs/eval/r"
 else
   echo "Bad eval set"
   exit 1;
