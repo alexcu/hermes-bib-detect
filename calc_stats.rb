@@ -1,8 +1,29 @@
 #!/usr/bin/env ruby
 
 require 'json'
+require 'csv'
 
-Region = Struct.new(:x1, :y1, :x2, :y2, :rbn)
+Region = Struct.new(:x1, :y1, :x2, :y2, :rbn, :accuracy, :crop_id, :is_text_detected)
+
+class Array
+  def sum
+    inject(0.0) { |result, el| result + el }
+  end
+
+  def mean
+    sum / size
+  end
+end
+
+class String
+  def intersection(other)
+    str = self.dup
+    other.split(//).inject(0) do |sum, char|
+      sum += 1 if str.sub!(char,'')
+      sum
+    end
+  end
+end
 
 def area(region)
   w = region.x2 - region.x1
@@ -32,14 +53,18 @@ def union(r1, r2)
   region
 end
 
-def parse_estimated_bibs(json_file)
-  JSON.parse(File.read(json_file))['bib']['regions'].map do |r|
+def parse_estimated_bibs(json)
+  return [] if json.nil?
+  json['bib']['regions'].map do |r|
     r['rbns'].map do |rbn|
       region = Region.new
       region.x1 = r['x1']
       region.y1 = r['y1']
       region.x2 = r['x2']
       region.y2 = r['y2']
+      region.accuracy = r['accuracy']
+      region.is_text_detected = r['is_text_detected']
+      region.crop_id = r['crop_id']
       region.rbn = rbn
       region
     end
@@ -97,7 +122,7 @@ def parse_ground_truth_bibs(json_file)
   end
 end
 
-def stats(ground_truths, estimated_bibs)
+def ocr_performance(ground_truths, estimated_bibs)
   # Add total number of GT bibs
   total_bibs = ground_truths.length
   # Pool of bibs in this image
@@ -106,41 +131,91 @@ def stats(ground_truths, estimated_bibs)
   false_positives = estimated_rbns - gt_rbns
   false_negatives = gt_rbns - estimated_rbns
   true_positives = gt_rbns & estimated_rbns
+  # Mean max character match rate
+  mean_max_character_match_rate = estimated_rbns.map do |est_rbn|
+    gt_rbns.map do |gt_rbn|
+      # Calculate chararcter match rate
+      gt_rbn.intersection(est_rbn) / est_rbn.length.to_f
+    end.max
+  end.mean
   {
+    mean_max_character_match_rate: mean_max_character_match_rate,
     true_positives: true_positives,
     false_negatives: false_negatives,
     false_positives: false_positives,
     true_positives_rate: true_positives.length.to_f / total_bibs,
     false_negatives_rate: false_negatives.length.to_f / total_bibs,
-    false_positives_rate: false_positives.length.to_f / total_bibs,
+    false_positives_rate: false_positives.length.to_f / total_bibs
   }
 end
 
-def calc_stats(ground_truth_json, estimated_bib_json)
-  ground_truths = parse_ground_truth_bibs(ground_truth_json)
-  estimated_bibs = parse_estimated_bibs(estimated_bib_json)
+def runtime_performance(json_for_image)
+  json_for_image['stats']['runtime']
+end
 
-  p = precision(ground_truths, estimated_bibs)
-  r = recall(ground_truths, estimated_bibs)
-  f = f_score(p, r)
-  s = stats(ground_truths, estimated_bibs)
-  stats_csv = "\"#{s[:true_positives].join(',')}\",\"#{s[:false_negatives].join(',')}\",\"#{s[:false_positives].join(',')}\",#{s[:true_positives_rate]},#{s[:false_negatives_rate]},#{s[:false_positives_rate]}"
-  puts "#{p},#{r},#{f},#{stats_csv}"
+def txt_det_performance(estimated_bibs)
+  estimated_bibs.map do |bib|
+    {
+      crop_id: bib.crop_id,
+      model_performance: is_text_detected.to_i
+    }
+  end
+end
+
+def bib_det_performance(ground_truths, estimated_bibs)
+  p   = precision(ground_truths, estimated_bibs)
+  r   = recall(ground_truths, estimated_bibs)
+  f   = f_score(p, r)
+  ebl = estimated_bibs.length
+  gtl = ground_truths.length
+  mp  = (ebl > gtl ? gtl : ebl / gtl)
+  mc  = estimated_bibs.map(&:accuracy).mean
+  {
+    num_gt_bibs: gtl,
+    num_est_bibs: etl,
+    model_performance: mp,
+    mean_confidence: mc,
+    precision: p,
+    recall: r,
+    f_score: f
+  }
 end
 
 def main
   ground_truth_json_dir = ARGV[0]
   estimated_bib_json_dir = ARGV[1]
+  out_dir = ARGV[2]
 
-  raise 'No ground truth JSON file provided' if ground_truth_json_dir.nil?
-  raise 'No bib detect JSON file provided' if estimated_bib_json_dir.nil?
+  raise 'No ground truth JSON directory provided' if ground_truth_json_dir.nil?
+  raise 'No bib detect "results" JSON file provided' if estimated_bib_json_dir.nil?
+  raise 'No output directory provided' if out_dir.nil?
 
-  puts "precision,recall,fscore,true_positives,false_negatives,false_positives,true_positives_rate,false_negatives_rate,false_positives_rate"
+  csv_files = {
+    bib_det_performance: [],
+    txt_det_performance: [],
+    ocr_performance: [],
+    runtime_performance: []
+  }
+
   Dir["#{ground_truth_json_dir}/*.json"].each do |gt_file|
     # Find respective output
-    file_id = File.basename(gt_file, ".jpg.json")
-    eb_file = "#{estimated_bib_json_dir}/#{file_id}.json"
-    calc_stats(gt_file, eb_file) if File.exist?(eb_file)
+    image_id = File.basename(gt_file, '.jpg.json')
+    results_file = "#{estimated_bib_json_dir}/results.json"
+    json_for_image = JSON.parse(File.read(results_file))[image_id]
+    puts json_for_image.inspect
+    estimated_bibs = parse_estimated_bibs(json_for_image)
+    ground_truths = parse_ground_truth_bibs(gt_file)
+    csv_files[:bib_det_performance] << bib_det_performance(ground_truths, estimated_bibs)
+    csv_files[:txt_det_performance] += txt_det_performance(estimated_bibs)
+    csv_files[:ocr_performance] << ocr_performance(ground_truths, estimated_bibs)
+    csv_files[:runtime_performance] << runtime_performance(json_for_image)
+  end
+
+  csv_files.each do |key, rows|
+    csv_file = "#{out_dir}/#{key}.csv"
+    puts csv_files.inspect
+    csv = CSV.new(rows.map(&:values), header: rows[0].keys)
+    CSV.open(csv_file, options: csv)
   end
 end
 

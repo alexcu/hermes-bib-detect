@@ -81,8 +81,6 @@ else
 	python3 zip.py $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/zip $(OUT_DIR)/$(JOB_ID)/out/text $(OUT_DIR)/$(JOB_ID)/out/ocr $(OUT_DIR)/$(JOB_ID)/out/bib
 endif
 
-measure_accuracy:
-	$(error TODO)
-# Check out/job_id/gt.json file (made from prepare)
-# if not exist, error
-# if exist then run measure_accuracy with file and spit out out/accuracy.json
+stats:
+	$(info Stats CSV output...)
+	./calc_stats.rb $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/zip $(OUT_DIR)/$(JOB_ID)/out/stats

@@ -100,13 +100,17 @@ def main():
     assert ocr_dir != None, "Missing ocr directory (argv[4])"
 
     aggregate_dir = sys.argv[5]
-    assert aggregate_dir != None, "Missing aggregate directory (argv[4])"
+    assert aggregate_dir != None, "Missing aggregate directory (argv[5])"
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
+    all_json = {}
+
     for file in glob("%s/*.jpg" % in_dir):
         image_id = os.path.splitext(os.path.basename(file))[0]
+        # Explicitly indicate nothing for output file UNLESS overriden at end...
+        all_json[image_id] = None
         img = cv2.imread(file)
         aggregate_json_file = "%s/%s.json" % (aggregate_dir, image_id)
         if not os.path.exists(aggregate_json_file):
@@ -121,10 +125,13 @@ def main():
             matches = re.search(re.escape(image_id) + "_crop_bib_(\d+).json", text_crop_file)
             bib_idx = int(matches.group(1))
             bib_for_text_crop = aggregate_json["bib"]["regions"][bib_idx]
+            bib_for_text_crop["crop_idx"] = bib_idx
+            bib_for_text_crop["is_text_detected"] = True
             # Attempt to read string for this text_crop json...
             ocr_bbox_file = "%s/%s_crop_text.json" % (ocr_dir, text_crop_id)
             if not os.path.exists(ocr_bbox_file):
                 print("No string file for '%s'. Skipping..." % text_crop_id)
+                bib_for_text_crop["is_text_detected"] = False
                 continue
             # Load the text crops and push them down by the correct origin
             txt_crop_json = read_json(text_crop_file)
@@ -152,24 +159,48 @@ def main():
             txt_accuracy = int(txt_crop_json["text"]["regions"][0]["accuracy"] * 100)
             img = annotate_bib_squares(img, bib_bbox)
             img = annotate_number_labels(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
+            for ocr in ocr_bbox_json["ocr"]:
+                ocr["belongs_to_bib_idx"] = bib_idx
+            txt_crop_json["text"]["belongs_to_bib_idx"] = bib_idx
             aggregate_json["text"].append(txt_crop_json["text"])
-            aggregate_json["ocr"].append(ocr_bbox_json["ocr"])
+            aggregate_json["ocr"] = aggregate_json["ocr"] + ocr_bbox_json["ocr"]
             aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
-        # Remove all bib sheet regions that do not have the 'RBN' field -- this
-        # We don't want to retain these regions in the aggregate JSON output as
-        # as there is no respective RBN for the region.
-        aggregate_json["bib"]["regions"] = [r for r in aggregate_json["bib"]["regions"] if "rbns" in r]
+        # Statistics
+        all_txt_regions = np.array([txt["regions"] for txt in aggregate_json["text"]]).flatten().tolist()
+        all_ocr_regions = np.array([ocr["regions"] for ocr in aggregate_json["ocr"]]).flatten().tolist()
+        all_txt_runtime = np.array([txt["elapsed_seconds"] for txt in aggregate_json["text"]]).flatten().sum()
+        all_ocr_runtime = np.array([ocr["elapsed_seconds"] for ocr in aggregate_json["ocr"]]).flatten().sum()
+        aggregate_json["stats"] = {
+            "num_regions": {
+                "bib": len(aggregate_json["bib"]["regions"]),
+                "text": len(all_txt_regions),
+                "ocr": len(all_ocr_regions)
+            },
+            "runtime": {
+                "bib": aggregate_json["bib"]["elapsed_seconds"],
+                "text": all_txt_runtime,
+                "ocr": all_ocr_runtime
+            }
+        }
+        # Add person stats if exists
+        if "person" in aggregate_json:
+            aggregate_json["stats"]["runtime"]["person"] = aggregate_json["person"]["elapsed_seconds"]
+            aggregate_json["stats"]["num_regions"]["person"] = len(aggregate_json["person"]["regions"])
         # Now finally spit everything out!
         if len(aggregate_json["text"]) == 0 or len(aggregate_json["ocr"]) == 0:
             print("No annotations to be made for '%s' - no text detections. Skipping..." % image_id)
             continue
-        out_json_file = ("%s/%s.json" % (out_dir, image_id))
+        # Indicate all json output should now be the updated aggregate
+        all_json[image_id] = aggregate_json
         out_jpeg_file = ("%s/%s.jpg" % (out_dir, image_id))
-        print("Writing annotated JSON '%s' to '%s'" % (image_id, out_json_file))
-        with open(out_json_file, 'w') as f:
-            json.dump(aggregate_json, f)
         print("Writing annotated JPEG '%s' to '%s'" % (image_id, out_jpeg_file))
         cv2.imwrite(out_jpeg_file, img)
+
+    # Writeout global stats file
+    out_json_file = ("%s/results.json" % out_dir)
+    print("Writing results JSON to '%s'" % out_json_file)
+    with open(out_json_file, 'w') as f:
+        json.dump(all_json, f)
 
 if __name__ == '__main__':
     main()
