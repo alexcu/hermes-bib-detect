@@ -18,13 +18,14 @@ run: prepare \
      person_aggregate \
      text_detect \
      ocr \
-     zip
+     zip \
+     stats
 else
 run: prepare \
      bib_detect \
      text_detect \
      ocr \
-     zip
+     stats
 endif
 
 prepare:
@@ -83,4 +84,4 @@ endif
 
 stats:
 	$(info Stats CSV output...)
-	./calc_stats.rb $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/zip $(OUT_DIR)/$(JOB_ID)/out/stats
+	./calc_stats.rb $(OUT_DIR)/$(JOB_ID)/input $(OUT_DIR)/$(JOB_ID)/out/zip $(OUT_DIR)/$(JOB_ID)/out/stats $(JOB_ID)

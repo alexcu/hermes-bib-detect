@@ -122,7 +122,7 @@ def parse_ground_truth_bibs(json_file)
   end
 end
 
-def ocr_performance(ground_truths, estimated_bibs)
+def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
   # Add total number of GT bibs
   total_bibs = ground_truths.length
   # Pool of bibs in this image
@@ -139,6 +139,8 @@ def ocr_performance(ground_truths, estimated_bibs)
     end.max
   end.mean
   {
+    job_id: job_id,
+    image_id: image_id,
     mean_max_character_match_rate: mean_max_character_match_rate,
     true_positives: true_positives,
     false_negatives: false_negatives,
@@ -149,20 +151,25 @@ def ocr_performance(ground_truths, estimated_bibs)
   }
 end
 
-def runtime_performance(json_for_image)
-  json_for_image['stats']['runtime']
+def runtime_performance(job_id, image_id, json_for_image)
+  json_for_image['stats']['runtime'] + {
+    job_id: job_id,
+    image_id: image_id
+  }
 end
 
-def txt_det_performance(estimated_bibs)
+def txt_det_performance(job_id, image_id, estimated_bibs)
   estimated_bibs.map do |bib|
     {
+      job_id: job_id,
+      image_id: image_id,
       crop_id: bib.crop_id,
       model_performance: is_text_detected.to_i
     }
   end
 end
 
-def bib_det_performance(ground_truths, estimated_bibs)
+def bib_det_performance(job_id, image_id, ground_truths, estimated_bibs)
   p   = precision(ground_truths, estimated_bibs)
   r   = recall(ground_truths, estimated_bibs)
   f   = f_score(p, r)
@@ -171,6 +178,8 @@ def bib_det_performance(ground_truths, estimated_bibs)
   mp  = (ebl > gtl ? gtl : ebl / gtl)
   mc  = estimated_bibs.map(&:accuracy).mean
   {
+    job_id: job_id,
+    image_id: image_id,
     num_gt_bibs: gtl,
     num_est_bibs: etl,
     model_performance: mp,
@@ -185,10 +194,12 @@ def main
   ground_truth_json_dir = ARGV[0]
   estimated_bib_json_dir = ARGV[1]
   out_dir = ARGV[2]
+  job_id = ARGV[3]
 
   raise 'No ground truth JSON directory provided' if ground_truth_json_dir.nil?
   raise 'No bib detect "results" JSON file provided' if estimated_bib_json_dir.nil?
   raise 'No output directory provided' if out_dir.nil?
+  raise 'No job id provided' if job_id.nil?
 
   csv_files = {
     bib_det_performance: [],
@@ -205,11 +216,13 @@ def main
     puts json_for_image.inspect
     estimated_bibs = parse_estimated_bibs(json_for_image)
     ground_truths = parse_ground_truth_bibs(gt_file)
-    csv_files[:bib_det_performance] << bib_det_performance(ground_truths, estimated_bibs)
-    csv_files[:txt_det_performance] += txt_det_performance(estimated_bibs)
-    csv_files[:ocr_performance] << ocr_performance(ground_truths, estimated_bibs)
-    csv_files[:runtime_performance] << runtime_performance(json_for_image)
+    csv_files[:bib_det_performance] << bib_det_performance(job_id,image_id, ground_truths, estimated_bibs)
+    csv_files[:txt_det_performance] += txt_det_performance(job_id, image_id, estimated_bibs)
+    csv_files[:ocr_performance] << ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
+    csv_files[:runtime_performance] << runtime_performance(job_id, image_id, json_for_image)
   end
+
+  FileUtils.mkdir_p(out_dir) unless Dir.exist?(out_dir)
 
   csv_files.each do |key, rows|
     csv_file = "#{out_dir}/#{key}.csv"
