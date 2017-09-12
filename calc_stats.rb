@@ -56,6 +56,17 @@ end
 def parse_estimated_bibs(json)
   return [] if json.nil?
   json['bib']['regions'].map do |r|
+    if r['rbns'].nil?
+      region = Region.new
+      region.x1 = r['x1']
+      region.x2 = r['x2']
+      region.y1 = r['y1']
+      region.y2 = r['y2']
+      region.accuracy = r['accuracy']
+      region.is_text_detected = r['is_text_detected']
+      region.crop_id = r['crop_idx']
+      return [region]
+    end
     r['rbns'].map do |rbn|
       region = Region.new
       region.x1 = r['x1']
@@ -127,7 +138,7 @@ def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
   total_bibs = ground_truths.length
   # Pool of bibs in this image
   gt_rbns = ground_truths.map(&:rbn)
-  estimated_rbns = estimated_bibs.map(&:rbn)
+  estimated_rbns = estimated_bibs.map(&:rbn).compact
   false_positives = estimated_rbns - gt_rbns
   false_negatives = gt_rbns - estimated_rbns
   true_positives = gt_rbns & estimated_rbns
@@ -152,10 +163,17 @@ def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
 end
 
 def runtime_performance(job_id, image_id, json_for_image)
-  json_for_image['stats']['runtime'] + {
-    job_id: job_id,
-    image_id: image_id
-  }
+  if json_for_image.nil?
+    {
+      job_id: job_id,
+      image_id: image_id
+    }
+  else
+    {
+      job_id: job_id,
+      image_id: image_id
+    }.merge(json_for_image['stats']['runtime'])
+  end
 end
 
 def txt_det_performance(job_id, image_id, estimated_bibs)
@@ -164,7 +182,7 @@ def txt_det_performance(job_id, image_id, estimated_bibs)
       job_id: job_id,
       image_id: image_id,
       crop_id: bib.crop_id,
-      model_performance: is_text_detected.to_i
+      model_performance: bib.is_text_detected ? 1 : 0
     }
   end
 end
@@ -181,7 +199,7 @@ def bib_det_performance(job_id, image_id, ground_truths, estimated_bibs)
     job_id: job_id,
     image_id: image_id,
     num_gt_bibs: gtl,
-    num_est_bibs: etl,
+    num_est_bibs: ebl,
     model_performance: mp,
     mean_confidence: mc,
     precision: p,
@@ -213,7 +231,6 @@ def main
     image_id = File.basename(gt_file, '.jpg.json')
     results_file = "#{estimated_bib_json_dir}/results.json"
     json_for_image = JSON.parse(File.read(results_file))[image_id]
-    puts json_for_image.inspect
     estimated_bibs = parse_estimated_bibs(json_for_image)
     ground_truths = parse_ground_truth_bibs(gt_file)
     csv_files[:bib_det_performance] << bib_det_performance(job_id,image_id, ground_truths, estimated_bibs)
@@ -226,9 +243,10 @@ def main
 
   csv_files.each do |key, rows|
     csv_file = "#{out_dir}/#{key}.csv"
-    puts csv_files.inspect
-    csv = CSV.new(rows.map(&:values), header: rows[0].keys)
-    CSV.open(csv_file, options: csv)
+    csv = CSV.new(File.open(csv_file, 'wb'), headers: rows[0].keys)
+    rows.map(&:values).each do |row|
+      csv << row
+    end
   end
 end
 
