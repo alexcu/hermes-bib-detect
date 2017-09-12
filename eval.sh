@@ -3,6 +3,7 @@
 EVAL_SET=$1 # Evaluation set is either `I' for ideal or `R' for realistic
 TRAIN_NO=$2 # Train number is either `1', `100', `500', or `all'
 CROP_HUM=$3 # Crop on humans is either `0' or `1'
+CMD=$4 # Command to run (default to `run')
 
 if [ "$EVAL_SET" == "i" ]; then
   EVAL_SET="I"
@@ -46,7 +47,11 @@ echo " - PICKLE_CONFIG_TXT=$PICKLE_CONFIG_TXT"
 echo " - TESSERACT_BIN_DIR=$TESSERACT_BIN_DIR"
 echo " - CROP_PEOPLE=$CROP_PEOPLE"
 
-make run\
+if [ -z "$CMD" ]; then
+  CMD="run"
+fi
+
+make $CMD \
   JOB_ID=$JOB_ID\
   IN_DIR=$IN_DIR\
   OUT_DIR=$OUT_DIR\
