@@ -62,7 +62,7 @@ Respective JSON file for this image:
          }
       ],
       "string":"~",
-      "elappsed_seconds":0.338908
+      "elapsed_seconds":0.338908
    },
    "person":{
       "regions":[

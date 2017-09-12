@@ -78,7 +78,7 @@ def proc_files(in_dir, out_dir, tesseract_dir)
         string_regions[unique_image_id][:ocr][p_id][:string] << data[:char]
       end
     end
-    string_regions[unique_image_id][:ocr][p_id][:elappsed_seconds] = (Time.now - start)
+    string_regions[unique_image_id][:ocr][p_id][:elapsed_seconds] = (Time.now - start)
   end
   puts 'Tesseract has fininshed!'
   string_regions.each do |id, hash|
@@ -87,7 +87,7 @@ def proc_files(in_dir, out_dir, tesseract_dir)
     next if hash[:ocr].nil? || hash[:ocr].empty?
     # Only keep recognition for whitelist characters
     out_hash = hash[:ocr].reject do |proc_hash|
-      proc_hash[:regions].empty? || proc_hash[:string].empty? #|| (proc_hash[:string] =~ CHAR_WHITELIST).nil?
+      proc_hash[:regions].empty? || proc_hash[:string].empty?
     end
     next if out_hash.empty?
     out_hash = { ocr: out_hash } # Wrap in ocr
