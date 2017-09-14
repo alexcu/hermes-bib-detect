@@ -29,9 +29,11 @@ else
   CROP_HUM_STR="NC"
 fi
 
+DATE=$(date +%d-%m-%Y)
+
 # Actual params
 JOB_ID="$EVAL_SET-$TRAIN_NO-$CROP_HUM_STR"
-OUT_DIR="/home/alex/out/eval/$(date +%d-%m-%Y)"
+OUT_DIR="/home/alex/out/eval/$DATE"
 DARKNET_DIR="/home/alex/bin/hermes-bib-detect/bin/darknet"
 PICKLE_CONFIG_TXT="/home/alex/out/models/text/18-08-2017/config.pickle"
 TESSERACT_BIN_DIR="/home/alex/local/bin"
