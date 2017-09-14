@@ -25,6 +25,7 @@ run: prepare \
      bib_detect \
      text_detect \
      ocr \
+     zip \
      stats
 endif
 
