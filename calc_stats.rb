@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'fileutils'
 require 'json'
 require 'csv'
 
@@ -11,7 +12,7 @@ class Array
   end
 
   def mean
-    sum / size
+    length.zero? ? 0 : sum / length
   end
 end
 
@@ -75,7 +76,7 @@ def parse_estimated_bibs(json)
       region.y2 = r['y2']
       region.accuracy = r['accuracy']
       region.is_text_detected = r['is_text_detected']
-      region.crop_id = r['crop_id']
+      region.crop_id = r['crop_idx']
       region.rbn = rbn
       region
     end
@@ -153,9 +154,9 @@ def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
     job_id: job_id,
     image_id: image_id,
     mean_max_character_match_rate: mean_max_character_match_rate,
-    true_positives: true_positives,
-    false_negatives: false_negatives,
-    false_positives: false_positives,
+    true_positives: true_positives.join(','),
+    false_negatives: false_negatives.join(','),
+    false_positives: false_positives.join(','),
     true_positives_rate: true_positives.length.to_f / total_bibs,
     false_negatives_rate: false_negatives.length.to_f / total_bibs,
     false_positives_rate: false_positives.length.to_f / total_bibs
@@ -169,10 +170,12 @@ def runtime_performance(job_id, image_id, json_for_image)
       image_id: image_id
     }
   else
+    data_hash = { person: nil }.merge(json_for_image['stats']['runtime'])
+    data_hash = Hash[ data_hash.sort_by { |key, val| key.to_s } ]
     {
       job_id: job_id,
       image_id: image_id
-    }.merge(json_for_image['stats']['runtime'])
+    }.merge(data_hash)
   end
 end
 
@@ -193,7 +196,8 @@ def bib_det_performance(job_id, image_id, ground_truths, estimated_bibs)
   f   = f_score(p, r)
   ebl = estimated_bibs.length
   gtl = ground_truths.length
-  mp  = (ebl > gtl ? gtl : ebl / gtl)
+  mp  = (ebl > gtl ? 1 : ebl.to_f / gtl)
+  puts "#{ebl}, #{gtl}, #{mp}"
   mc  = estimated_bibs.map(&:accuracy).mean
   {
     job_id: job_id,
@@ -240,10 +244,10 @@ def main
   end
 
   FileUtils.mkdir_p(out_dir) unless Dir.exist?(out_dir)
-
+  
   csv_files.each do |key, rows|
     csv_file = "#{out_dir}/#{key}.csv"
-    csv = CSV.new(File.open(csv_file, 'wb'), headers: rows[0].keys)
+    csv = CSV.new(File.open(csv_file, 'wb'), headers: rows[0].keys, write_headers: true)
     rows.map(&:values).each do |row|
       csv << row
     end
