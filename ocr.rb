@@ -16,6 +16,8 @@ require 'matrix'
 require 'rmagick'
 
 CHAR_WHITELIST = "^A-Z0-9\-".freeze
+# Reject all matches whose area are less than 25% of the mean area
+REJECT_AREA = 0.25
 
 def process_line(file, line)
   re = /^([^\s]+)\s(\d+)\s(\d+)\s(\d+)\s(\d+)\s\d+$/
@@ -30,8 +32,11 @@ def process_line(file, line)
   x2 = matches[4].to_i
   y2 = matches[5].to_i
   h = Magick::Image.ping(file).first.rows
-  y2 = (h - y1)
   y1 = (h - y2)
+  y2 = (h - y1)
+  width = x2 - x1
+  height = y2 - y1
+  return nil if (y2 - y1 < 0 || x2 - x1 < 0)
   return {
     char: char,
     x1: x1,
@@ -61,7 +66,7 @@ def proc_files(in_dir, out_dir, tesseract_dir)
       ./tesseract
       "#{file}"
       stdout
-      -psm 8
+      -psm 10
       -oem 4
       quiet
       makebox
@@ -90,6 +95,18 @@ def proc_files(in_dir, out_dir, tesseract_dir)
       proc_hash[:regions].empty? || proc_hash[:string].empty?
     end
     next if out_hash.empty?
+    # Reject all characters whose area is less than 25% of the mean area
+    all_regions = out_hash.map { |p| p[:regions] }.flatten
+    mean_area = all_regions.map { |r| r[:width] * r[:height] }.reduce(0, :+) / all_regions.size
+    out_hash.each do |proc_hash|
+      proc_hash[:regions].reject! do |r|
+        r[:width] * r[:height] < mean_area * REJECT_AREA
+      end
+    end
+    # Finalise all output strings for region
+    out_hash.each do |proc_hash|
+      proc_hash[:string] = proc_hash[:regions].map { |r| r[:char] }.join
+    end
     out_hash = { ocr: out_hash } # Wrap in ocr
     out_file = "#{out_dir}/#{id}.json"
     puts "Writing JSON to '#{id}' to '#{out_file}'..."
