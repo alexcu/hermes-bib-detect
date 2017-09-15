@@ -101,12 +101,14 @@ def main():
         os.makedirs(out_dir)
 
     all_json = {}
-
+    all_jpgs = {}
+    
     for file in glob("%s/*.jpg" % in_dir):
         image_id = os.path.splitext(os.path.basename(file))[0]
         # Explicitly indicate nothing for output file UNLESS overriden at end...
         all_json[image_id] = None
         img = cv2.imread(file)
+        all_jpgs[image_id] = img
         aggregate_json_file = "%s/%s.json" % (aggregate_dir, image_id)
         if not os.path.exists(aggregate_json_file):
             print("No aggregate json file for '%s'. Skipping..." % image_id)
@@ -131,6 +133,7 @@ def main():
             if not os.path.exists(ocr_bbox_file):
                 print("No string file for '%s'. Skipping..." % text_crop_id)
                 bib_for_text_crop["is_text_detected"] = False
+                
                 continue
             # Load the text crops and push them down by the correct origin
             txt_crop_json = read_json(text_crop_file)
@@ -217,6 +220,9 @@ def main():
             continue
         # Indicate all json output should now be the updated aggregate
         all_json[image_id] = aggregate_json
+
+    # Output all jpegs
+    for (image_id, img) in all_jpgs.items():
         out_jpeg_file = ("%s/%s.jpg" % (out_dir, image_id))
         print("Writing annotated JPEG '%s' to '%s'" % (image_id, out_jpeg_file))
         cv2.imwrite(out_jpeg_file, img)
