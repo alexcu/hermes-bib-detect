@@ -165,14 +165,14 @@ def main():
         # Annotate each person if exists
         if 'person' in aggregate_json:
             for r in [r for r in aggregate_json['person']['regions']]:
-                s = ("Person [c:%n]" % r['accuracy'])
+                s = ("Person [c:%s]" % r['accuracy'])
                 cyan = (0,255,255)
                 img = annotate_bbox(img, r, cyan)
                 img = annotate_label(img, r, s, cyan)
         # Annotate each bib region
         for r in [r for r in aggregate_json['bib']['regions']]:
             rbns = ','.join(r['rbns'])
-            s = ("Bib [#:%s][c:%n]" % (rbns, r['accuracy']))
+            s = ("Bib [#:%s][c:%s]" % (rbns, r['accuracy']))
             lime = (0,255,0)
             img = annotate_bbox(img, r, lime)
             img = annotate_label(img, r, s, lime)
