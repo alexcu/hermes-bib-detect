@@ -27,37 +27,33 @@ import json
 import numpy as np
 import re
 
-def annotate_bib_squares(img, bib_bbox):
+def annotate_bbox(img, bib_bbox, color=(0,255,0)):
     """Annotates a bbox on an image given the bounding box of the bib region.
     Args:
         img (cv2 image): Image read by cv2.
         bib_bbox (dict): Bounding box for the bib region.
+        color (list): Color to annotate.
     Returns:
         img (cv2 image): Annotated cv2 image.
     """
-    lime = (0,255,0)
-    black = (0,0,0)
-    font = cv2.FONT_HERSHEY_PLAIN
     # Bib regions (draw first)
     x1 = bib_bbox["x1"]
     y1 = bib_bbox["y1"]
     x2 = bib_bbox["x2"]
     y2 = bib_bbox["y2"]
-    cv2.rectangle(img, (x1, y1), (x2, y2), lime, 2)
+    cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
     return img
 
-def annotate_number_labels(img, bib_bbox, string, bib_accuracy, txt_accuracy):
+def annotate_label(img, bib_bbox, label, color=(0,255,0)):
     """Annotates an bbox's label given the bounding box of the bib region.
     Args:
         img (cv2 image): Image read by cv2.
         bib_bbox (dict): Bounding box for the bib region.
-        string (string): The string that tesseract read from this bib.
-        bib_accuracy (int): The accuracy of bib detection.
-        txt_accuracy (int): The accuracy of text detection.
+        label (string): The string to label.
+        color (list): Color to annotate.
     Returns:
         img (cv2 image): Annotated cv2 image.
     """
-    lime = (0,255,0)
     black = (0,0,0)
     font = cv2.FONT_HERSHEY_PLAIN
     # labels for accuracy (overlay)
@@ -65,11 +61,10 @@ def annotate_number_labels(img, bib_bbox, string, bib_accuracy, txt_accuracy):
     y1 = bib_bbox["y1"]
     x2 = bib_bbox["x2"]
     y2 = bib_bbox["y2"]
-    label = "[%s][b:%s%%,t:%s%%]" % (string, bib_accuracy, txt_accuracy)
     fnt_sz, baseline = cv2.getTextSize(label, font, 1, 1)
     acc_rect_pt1 = (x1, y1 + baseline - 5)
     acc_rect_pt2 = (x1 + fnt_sz[0] + 5, y1 - fnt_sz[1] - 5)
-    cv2.rectangle(img, acc_rect_pt1, acc_rect_pt2, lime, -1)
+    cv2.rectangle(img, acc_rect_pt1, acc_rect_pt2, color, -1)
     cv2.putText(img, label, (x1,y1), font, 1, black)
     return img
 
@@ -157,21 +152,40 @@ def main():
             all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
             # If there are no string detections (all_strings empty) then
             # we skip this candidate.
-            strings = ','.join(all_strings)
             bib_bbox = bib_for_text_crop
             bib_accuracy = int(bib_for_text_crop["accuracy"] * 100)
             txt_accuracy = int(txt_crop_json["text"]["regions"][0]["accuracy"] * 100)
-            img = annotate_bib_squares(img, bib_bbox)
-            img = annotate_number_labels(img, bib_bbox, strings, bib_accuracy, txt_accuracy)
             for ocr in ocr_bbox_json["ocr"]:
                 ocr["belongs_to_bib_idx"] = bib_idx
             txt_crop_json["text"]["belongs_to_bib_idx"] = bib_idx
             aggregate_json["text"].append(txt_crop_json["text"])
             aggregate_json["ocr"] = aggregate_json["ocr"] + ocr_bbox_json["ocr"]
             aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
-        # Statistics
+        # Annotation
+        # Annotate each person if exists
+        if 'person' in aggregate_json:
+            for r in [r for r in aggregate_json['person']['regions']]:
+                s = ("Person [c:%n]" % r['accuracy'])
+                cyan = (0,255,255)
+                img = annotate_bbox(img, r, cyan)
+                img = annotate_label(img, r, s, cyan)
+        # Annotate each bib region
+        for r in [r for r in aggregate_json['bib']['regions']]:
+            rbns = ','.join(r['rbns'])
+            s = ("Bib [#:%s][c:%n]" % (rbns, r['accuracy']))
+            lime = (0,255,0)
+            img = annotate_bbox(img, r, lime)
+            img = annotate_label(img, r, s, lime)
+        # Annotate each text & char region
         all_txt_regions = np.array([txt["regions"] for txt in aggregate_json["text"]]).flatten().tolist()
         all_ocr_regions = np.array([ocr["regions"] for ocr in aggregate_json["ocr"]]).flatten().tolist()
+        for r in all_txt_regions:
+            white = (255,255,255)
+            img = annotate_bbox(img, r, lime)
+        for r in all_ocr_regions:
+            black = (0,0,0)
+            img = annotate_bbox(img, r, lime)
+        # Statistics
         all_txt_runtime = np.array([txt["elapsed_seconds"] for txt in aggregate_json["text"]]).flatten().sum()
         all_ocr_runtime = np.array([ocr["elapsed_seconds"] for ocr in aggregate_json["ocr"]]).flatten().sum()
         aggregate_json["stats"] = {
