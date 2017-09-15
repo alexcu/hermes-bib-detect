@@ -149,7 +149,7 @@ def main():
                     region["x2"] += txt_crop_json["text"]["regions"][0]["x1"]
                     region["y2"] += txt_crop_json["text"]["regions"][0]["y1"]
             # Now annotate the image and JSON
-            all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"]]
+            all_strings = [ocr["string"] for ocr in ocr_bbox_json["ocr"] if "string" in ocr]
             aggregate_json["bib"]["regions"][bib_idx]["rbns"] = all_strings
             aggregate_json["text"].append(txt_crop_json["text"])
             aggregate_json["ocr"] = aggregate_json["ocr"] + ocr_bbox_json["ocr"]

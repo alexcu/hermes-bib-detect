@@ -15,6 +15,8 @@ require 'fileutils'
 require 'matrix'
 require 'rmagick'
 
+# This regex culls false positives
+RBN_REGEX = "(?:[A-Z]+-)?[0-9]+".freeze
 CHAR_WHITELIST = "^A-Z0-9\-".freeze
 # Reject all matches whose area are less than 25% of the mean area
 REJECT_AREA = 0.25
@@ -98,10 +100,15 @@ def proc_files(in_dir, out_dir, tesseract_dir)
     # Reject all characters whose area is less than 25% of the mean area
     all_regions = out_hash.map { |p| p[:regions] }.flatten
     mean_area = all_regions.map { |r| r[:width] * r[:height] }.reduce(0, :+) / all_regions.size
+    mean_area = 100 if mean_area < 100
     out_hash.each do |proc_hash|
       proc_hash[:regions].reject! do |r|
         r[:width] * r[:height] < mean_area * REJECT_AREA
       end
+    end
+    # Reject the entire OCR if it does not match our RBN Regexp
+    out_hash.reject! do |proc_hash|
+      (proc_hash[:string] =~ Regexp.new(RBN_REGEX)).nil?
     end
     # Finalise all output strings for region
     out_hash.each do |proc_hash|
