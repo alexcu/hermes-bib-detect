@@ -19,7 +19,9 @@ require 'rmagick'
 RBN_REGEX = "(?:[A-Z]+-)?[0-9]+".freeze
 CHAR_WHITELIST = "^A-Z0-9\-".freeze
 # Reject all matches whose area are less than 25% of the mean area
-REJECT_AREA = 0.25
+REJECT_AREA_PROP = 0.25
+# Reject all matches whose area is smaller than 10px || 10px
+REJECT_DIMENSION_SIZE = 10
 
 def process_line(file, line)
   re = /^([^\s]+)\s(\d+)\s(\d+)\s(\d+)\s(\d+)\s\d+$/
@@ -103,7 +105,9 @@ def proc_files(in_dir, out_dir, tesseract_dir)
     mean_area = 100 if mean_area < 100
     out_hash.each do |proc_hash|
       proc_hash[:regions].reject! do |r|
-        r[:width] * r[:height] < mean_area * REJECT_AREA
+        r[:width] < REJECT_DIMENSION_SIZE ||
+          r[:height] < REJECT_DIMENSION_SIZE ||
+          r[:width] * r[:height] < mean_area * REJECT_AREA_PROP
       end
     end
     # Reject the entire OCR if it does not match our RBN Regexp
