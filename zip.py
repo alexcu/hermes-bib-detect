@@ -170,6 +170,8 @@ def main():
         # Annotate each bib region
         for r in [r for r in aggregate_json['bib']['regions']]:
             rbns = [] if 'rbns' not in r else r['rbns']
+            if len(rbns) == 0:
+                continue
             rbns = ','.join(rbns)
             s = ("Bib [#:%s][c:%0.2f]" % (rbns, r['accuracy']))
             img = annotate_bbox(img, r, lime)
@@ -180,6 +182,8 @@ def main():
         if len(all_ocr_regions) > 1:
             all_ocr_regions = all_ocr_regions.flatten()
         for r in all_ocr_regions:
+            if type(r) is dict:
+                r = [r]
             for r in r:
                 s = ("%s" % r['char'])
                 img = annotate_bbox(img, r, black)
