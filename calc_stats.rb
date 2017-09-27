@@ -147,7 +147,8 @@ def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
   mean_max_character_match_rate = estimated_rbns.map do |est_rbn|
     gt_rbns.map do |gt_rbn|
       # Calculate chararcter match rate
-      gt_rbn.intersection(est_rbn) / est_rbn.length.to_f
+      intersection = gt_rbn.intersection(est_rbn)
+      0.5 * ((intersection /  est_rbn.length.to_f) + (intersection /  gt_rbn.length.to_f))
     end.max
   end.mean
   {
@@ -244,7 +245,7 @@ def main
   end
 
   FileUtils.mkdir_p(out_dir) unless Dir.exist?(out_dir)
-  
+
   csv_files.each do |key, rows|
     csv_file = "#{out_dir}/#{key}.csv"
     csv = CSV.new(File.open(csv_file, 'wb'), headers: rows[0].keys, write_headers: true)
