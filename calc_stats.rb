@@ -139,12 +139,12 @@ def ocr_performance(job_id, image_id, ground_truths, estimated_bibs)
   total_bibs = ground_truths.length
   # Pool of bibs in this image
   gt_rbns = ground_truths.map(&:rbn)
-  estimated_rbns = estimated_bibs.map(&:rbn).compact
+  estimated_rbns = estimated_bibs.map(&:rbn).compact.reject(&:empty?)
   false_positives = estimated_rbns - gt_rbns
   false_negatives = gt_rbns - estimated_rbns
   true_positives = gt_rbns & estimated_rbns
   # Mean max character match rate
-  mean_max_character_match_rate = estimated_rbns.map do |est_rbn|
+  mean_max_character_match_rate = estimated_rbns.map do |est_rbn|    
     gt_rbns.map do |gt_rbn|
       # Calculate chararcter match rate
       intersection = gt_rbn.intersection(est_rbn)
